@@ -12,6 +12,7 @@ import { formatDateTime } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { buttonClasses } from "@/components/ui/button";
 import { orderStatusLabels, paymentStatusLabels } from "@/lib/constants";
+import { getPriceReviewStateFromSettings } from "@/lib/price-review";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,7 @@ export default async function AdminDashboardPage() {
 
   const env = getEnv();
   const paymentOptions = buildPaymentOptions(settings, env);
+  const priceReview = getPriceReviewStateFromSettings(settings);
   const demoCount = await db.product.count({
     where: { dataStatus: "DEMO", archivedAt: null },
   });
@@ -46,6 +48,16 @@ export default async function AdminDashboardPage() {
           : "Delivery areas are configured.",
       done: areas.length > 0 && !areas.some((area) => area.feeRwf === 0),
       href: "/admin/settings",
+    },
+    {
+      label: "Weekly reference-price review",
+      detail: `${priceReview.label}${
+        settings.priceReview.lastReviewedAt
+          ? ` - last reviewed ${settings.priceReview.lastReviewedAt.slice(0, 10)}`
+          : " - no review recorded yet"
+      }. Reviewing never changes prices automatically.`,
+      done: !priceReview.isDue,
+      href: "/admin/price-review",
     },
     {
       label: "Publish approved products",

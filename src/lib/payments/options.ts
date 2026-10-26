@@ -20,6 +20,10 @@ export type PaymentOption = {
   enabled: boolean;
   /** Short explanation shown in admin when the method cannot be offered. */
   unavailableReason?: string;
+  /** Number the customer must pay for manual mobile money methods. */
+  receivingNumber?: string;
+  /** False when the business has not confirmed the receiving account. */
+  receivingAccountVerified?: boolean;
 };
 
 export function isMtnMomoConfigured(env: AppEnv): boolean {
@@ -38,8 +42,8 @@ export function buildPaymentOptions(
 ): PaymentOption[] {
   const { payments } = settings;
   const mtnConfigured = isMtnMomoConfigured(env);
-  const momoNumber = payments.manualMobileMoney.mtnNumber ||
-    payments.manualMobileMoney.airtelNumber;
+  const mtnNumber = payments.manualMobileMoney.mtnNumber;
+  const airtelNumber = payments.manualAirtelMoney.number;
 
   return [
     {
@@ -55,16 +59,32 @@ export function buildPaymentOptions(
     },
     {
       method: "MANUAL_MOBILE_MONEY",
-      label: "MTN MoMo / Airtel Money (verify manually)",
+      label: "MTN MoMo (manual verification)",
       description:
-        "Send the total by mobile money and submit your transaction reference for verification.",
+        "Send the products total by MTN MoMo and submit the transaction reference from your SMS for verification.",
       instructions: payments.manualMobileMoney.instructions,
       requiresReference: true,
-      enabled: payments.manualMobileMoney.enabled && Boolean(momoNumber),
+      receivingNumber: mtnNumber,
+      enabled: payments.manualMobileMoney.enabled && Boolean(mtnNumber),
       unavailableReason:
-        payments.manualMobileMoney.enabled && momoNumber
+        payments.manualMobileMoney.enabled && mtnNumber
           ? undefined
-          : "A merchant mobile money number has not been configured yet.",
+          : "An MTN MoMo receiving number has not been configured yet.",
+    },
+    {
+      method: "MANUAL_AIRTEL_MONEY",
+      label: "Airtel Money (manual verification)",
+      description:
+        "Send the products total by Airtel Money and submit the transaction reference from your SMS for verification.",
+      instructions: payments.manualAirtelMoney.instructions,
+      requiresReference: true,
+      receivingNumber: airtelNumber,
+      receivingAccountVerified: payments.manualAirtelMoney.verified,
+      enabled: payments.manualAirtelMoney.enabled && Boolean(airtelNumber),
+      unavailableReason:
+        payments.manualAirtelMoney.enabled && airtelNumber
+          ? undefined
+          : "An Airtel Money receiving number has not been configured yet.",
     },
     {
       method: "BANK_TRANSFER",

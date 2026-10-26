@@ -19,6 +19,7 @@ type PaymentOption = {
   description: string;
   instructions: string;
   requiresReference: boolean;
+  receivingNumber: string | null;
 };
 
 type ServerItem = {
@@ -37,14 +38,12 @@ export function CheckoutForm({
   paymentOptions,
   maxQuantityPerItem,
   bankDetails,
-  mobileMoneyNumbers,
   deliveryNotice,
 }: {
   areas: DeliveryArea[];
   paymentOptions: PaymentOption[];
   maxQuantityPerItem: number;
   bankDetails: { bankName: string; accountName: string; accountNumber: string } | null;
-  mobileMoneyNumbers: { mtn: string; airtel: string };
   deliveryNotice: string;
 }) {
   const { items, ready, clearCart } = useCart();
@@ -250,10 +249,12 @@ export function CheckoutForm({
             <div className="mt-4 rounded-xl bg-surface p-4 text-xs leading-5 text-navy-700">
               <p className="font-semibold text-navy-900">How this works</p>
               <p className="mt-1">{selectedOption.instructions}</p>
-              {selectedOption.method === "MANUAL_MOBILE_MONEY" ? (
+              {selectedOption.receivingNumber ? (
                 <p className="mt-2">
-                  Mobile money numbers:{" "}
-                  {[mobileMoneyNumbers.mtn, mobileMoneyNumbers.airtel].filter(Boolean).join(" / ") || "contact us"}
+                  Pay to:{" "}
+                  <span className="font-semibold text-navy-900">
+                    {selectedOption.receivingNumber.replace(/(\d{4})(\d{3})(\d{3})/, "$1 $2 $3")}
+                  </span>
                 </p>
               ) : null}
               {selectedOption.method === "BANK_TRANSFER" && bankDetails ? (

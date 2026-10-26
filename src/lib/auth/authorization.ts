@@ -2,17 +2,10 @@ import "server-only";
 
 import { redirect } from "next/navigation";
 import { getCurrentUser, type AdminUser } from "@/lib/auth/session";
+import { assertAdmin, assertStaff, hasRole } from "@/lib/auth/guards";
 import type { Role } from "@prisma/client";
 
-/** Role hierarchy: ADMIN can do everything STAFF can, plus user management. */
-const roleRank: Record<Role, number> = {
-  STAFF: 1,
-  ADMIN: 2,
-};
-
-export function hasRole(user: AdminUser, required: Role): boolean {
-  return roleRank[user.role] >= roleRank[required];
-}
+export { hasRole };
 
 /** Requires any authenticated staff member; redirects to the login page. */
 export async function requireStaff(): Promise<AdminUser> {
@@ -29,17 +22,18 @@ export async function requireAdmin(): Promise<AdminUser> {
 }
 
 /**
- * For server actions: returns the user or throws. Used together with
- * `safeAction` so a forged request never mutates data.
+ * For server actions: returns the user or throws an AuthorizationError.
+ * Every administrative mutation calls one of these before touching data, so a
+ * forged request cannot change settings, prices, orders or stock.
  */
 export async function requireStaffForAction(): Promise<AdminUser> {
-  const user = await getCurrentUser();
-  if (!user) throw new Error("UNAUTHENTICATED");
-  return user;
+  return assertStaff(await getCurrentUser());
 }
 
 export async function requireAdminForAction(): Promise<AdminUser> {
-  const user = await requireStaffForAction();
-  if (!hasRole(user, "ADMIN")) throw new Error("FORBIDDEN");
-  return user;
+  return assertAdmin(await getCurrentUser());
+}
+
+export function adminRoleLabel(role: Role): string {
+  return role === "ADMIN" ? "Administrator" : "Staff";
 }

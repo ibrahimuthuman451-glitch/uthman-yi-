@@ -66,7 +66,7 @@ describe("payment capability gating", () => {
       ...defaultSettings,
       payments: {
         ...defaultSettings.payments,
-        manualMobileMoney: { enabled: true, mtnNumber: "", airtelNumber: "", instructions: "" },
+        manualMobileMoney: { enabled: true, mtnNumber: "", instructions: "" },
       },
     };
     const option = buildPaymentOptions(settings, envWithoutMomo).find(
@@ -79,6 +79,46 @@ describe("payment capability gating", () => {
     const options = buildPaymentOptions(defaultSettings, envWithoutMomo);
     expect(options.find((option) => option.method === "MANUAL_MOBILE_MONEY")?.enabled).toBe(true);
     expect(options.find((option) => option.method === "CASH_ON_DELIVERY")?.enabled).toBe(false);
+  });
+
+  it("exposes MTN and Airtel as two separate manual methods", () => {
+    const options = buildPaymentOptions(defaultSettings, envWithoutMomo);
+    const mtn = options.find((option) => option.method === "MANUAL_MOBILE_MONEY");
+    const airtel = options.find((option) => option.method === "MANUAL_AIRTEL_MONEY");
+
+    expect(mtn).toBeDefined();
+    expect(airtel).toBeDefined();
+    expect(mtn?.receivingNumber).toBe("0780551125");
+    expect(airtel?.receivingNumber).toBe("0727733580");
+    expect(mtn?.label).not.toBe(airtel?.label);
+    expect(mtn?.enabled).toBe(true);
+    expect(airtel?.enabled).toBe(true);
+    // The supplied Airtel number has not been confirmed by the business yet.
+    expect(airtel?.receivingAccountVerified).toBe(false);
+  });
+
+  it("hides Airtel Money when no receiving number is configured", () => {
+    const settings = {
+      ...defaultSettings,
+      payments: {
+        ...defaultSettings.payments,
+        manualAirtelMoney: {
+          ...defaultSettings.payments.manualAirtelMoney,
+          number: "",
+        },
+      },
+    };
+    const airtel = buildPaymentOptions(settings, envWithoutMomo).find(
+      (option) => option.method === "MANUAL_AIRTEL_MONEY",
+    );
+    expect(airtel?.enabled).toBe(false);
+    expect(airtel?.unavailableReason).toMatch(/Airtel Money receiving number/i);
+    // MTN stays available: the methods are independent.
+    expect(
+      buildPaymentOptions(settings, envWithoutMomo).find(
+        (option) => option.method === "MANUAL_MOBILE_MONEY",
+      )?.enabled,
+    ).toBe(true);
   });
 
   it("treats prepaid methods differently from cash on delivery", () => {

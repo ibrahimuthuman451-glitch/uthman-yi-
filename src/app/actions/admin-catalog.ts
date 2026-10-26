@@ -250,14 +250,24 @@ export async function importCatalogueAction(
     return actionError("That is not valid JSON. Check the format in the documentation and try again.");
   }
 
+  // Re-pricing is an explicit, separate decision: by default an import keeps
+  // every approved selling price that already exists.
+  const updatePrices = formString(formData, "updatePrices") === "on";
+
   try {
-    const summary = await importCatalogue(payload);
+    const summary = await importCatalogue(payload, { updatePrices });
     await recordAudit({
       actorId: user.id,
       actorEmail: user.email,
       action: "catalogue.imported",
       entityType: "Product",
-      metadata: { created: summary.created, updated: summary.updated, errors: summary.errors.length },
+      metadata: {
+        created: summary.created,
+        updated: summary.updated,
+        pricesPreserved: summary.pricesPreserved,
+        updatePrices,
+        errors: summary.errors.length,
+      },
     });
     revalidatePath("/admin/products");
     revalidatePath("/shop");

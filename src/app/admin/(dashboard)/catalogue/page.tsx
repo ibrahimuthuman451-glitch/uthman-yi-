@@ -82,6 +82,15 @@ export default async function CatalogueIoPage() {
             <Field label="Catalogue JSON" htmlFor="payload" required hint="Paste the full JSON object.">
               <Textarea id="payload" name="payload" rows={10} required />
             </Field>
+            <label className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900">
+              <input type="checkbox" name="updatePrices" className="mt-0.5 h-4 w-4 rounded border-amber-300" />
+              <span>
+                <span className="font-semibold">Overwrite existing approved prices</span>
+                <br />
+                Leave this off for a normal catalogue refresh. With it off, every price already stored is preserved,
+                even if the JSON contains a different amount.
+              </span>
+            </label>
           </AdminActionForm>
         </div>
         <p className="mt-4 text-xs leading-5 text-muted">

@@ -50,14 +50,16 @@ Environment: Node.js 24.22, npm 11.19, Next.js 15.5.28, Prisma 6.19.3, PostgreSQ
 | Command | Result |
 | --- | --- |
 | `npx prisma migrate dev --name init` | Migration `20261025223854_init` created and applied; Prisma Client generated |
+| `npx prisma migrate dev --name delivery_fee_status_and_airtel_money` | Migration `20261026091146_delivery_fee_status_and_airtel_money` applied: `DeliveryFeeStatus` enum, order delivery-fee fields, `MANUAL_AIRTEL_MONEY` payment method |
+| `npx tsx --tsconfig tsconfig.scripts.json scripts/import-owner-catalogue.ts --apply-settings` | Re-ran the import after the safety fix: `created 0, updated 60, prices preserved 60, errors 0` — approved prices were not overwritten |
 | `npx prisma db seed` | Created administrator, settings, 1 placeholder delivery area, 8 categories, 26 reference research rows, 6 labelled demo products, 8 services, 3 software products |
 | `npx tsc --noEmit` | Passes with no errors |
 | `npx next lint` | Passes with no warnings or errors |
 | `npm run build:ci` | Production build succeeds; 37 routes compiled |
-| `npm test` | 50 tests pass (7 files: pricing, availability, validation, payments, orders, inquiries and catalogue import) |
+| `npm test` | 78 tests pass (10 files: pricing, availability, validation, payments, orders, delivery fees, price review, imports, inquiries, authorization guards) |
 | `npx tsx --tsconfig tsconfig.scripts.json scripts/import-owner-catalogue.ts --remove-demo` | Imported 60 approved listings (0 errors), removed 6 demo listings, activated nationwide delivery, set stock-on-request and mobile-money settings |
-| `npm run smoke` | 34/34 HTTP checks pass against `next start` |
-| `node scripts/check-links.mjs` | Crawled 46 pages; no broken internal links or images |
+| `npm run smoke` | 42/42 HTTP checks pass against `next start` (adds payment-method separation and admin-protection checks) |
+| `node scripts/check-links.mjs` | Crawled 60 pages; no broken internal links or images |
 
 ### Verification evidence (selected)
 
@@ -94,12 +96,14 @@ Environment: Node.js 24.22, npm 11.19, Next.js 15.5.28, Prisma 6.19.3, PostgreSQ
 | Item | State | Blocker |
 | --- | --- | --- |
 | Official logo | **Integrated 2026-10-26** - original PNG used unchanged in header, footer lockup, OG image and icon | Resolved |
-| Real product catalogue | **Imported 2026-10-26**: 60 approved, published listings with current RWF prices (names/prices adopted from the reference shop at owner instruction) | Product photos and verified specifications still needed; prices to be re-checked by the owner |
-| Delivery | Nationwide delivery area active; fee agreed by phone before dispatch (not charged online) | Add fixed-fee areas in Admin if a published price list is wanted |
+| Real product catalogue | **Imported 2026-10-26, prices approved**: 60 published listings with approved RWF selling prices; re-imports preserve those prices (`prices preserved 60` on re-run) | Product photos and verified specifications still needed |
+| Weekly price review | **Implemented**: 7-day schedule, due/overdue reminders on the dashboard, products page and nav, review recording that never changes prices | Owner should decide who performs the weekly check |
+| Delivery | Nationwide area active; order starts `PENDING_AGREEMENT` with a products-only total; staff record the agreed fee which updates the total | Add fixed-fee areas in Admin if a published price list is wanted |
 | Customer accounts / order history | Not implemented | Guest checkout + tracking-by-order-number is implemented instead |
 | Product image uploads | Disabled (URL/path only) | No storage provider and no upload validation implemented |
 | Card payments | Not implemented | No provider account/contract |
-| Mobile money (manual) | **Enabled**: MTN MoMo number configured; customer submits reference, staff verify | Airtel Money number not yet supplied |
+| MTN MoMo (manual) | **Enabled** on 0780551125: customer submits reference, staff verify | Working; verify each payment in the statement |
+| Airtel Money (manual) | **Enabled** on 0727 733 580, marked **unverified** | Business must confirm the receiving account before relying on it |
 | MTN MoMo API | Written but disabled and untested | Merchant credentials + sandbox round |
 | Email notifications | Not implemented | No mail provider |
 | Refunds | Manual only | Business process decision |
@@ -114,7 +118,7 @@ Environment: Node.js 24.22, npm 11.19, Next.js 15.5.28, Prisma 6.19.3, PostgreSQ
 4. **Strong admin password** (the seed refuses the example value in production).
 5. **Domain name** (optional but expected for launch) and HTTPS.
 6. **SMTP/API credentials** if automatic form notifications are wanted. The public contact email is configured.
-7. **Airtel Money merchant number** to display at checkout (MTN MoMo 0780551125 is configured).
+7. **Confirmation of the Airtel Money receiving account** (`0727 733 580`), which is configured but marked unverified.
 8. **MTN MoMo Collections API** credentials (subscription key, API user/key, public callback URL) and a
    successful sandbox round if automatic payment confirmation is wanted instead of manual verification.
 9. **Payment/bank details** if bank transfer is to be offered.
@@ -175,10 +179,10 @@ Detailed steps: `docs/DEPLOYMENT.md` and `docs/PAYMENTS.md`.
 ## 10. Decisions and content that need the owner's approval
 
 1. ~~Logo file~~ - received 2026-10-26; confirm it is the final artwork (a vector version would scale better in print).
-2. **Adopted prices** - the 60 listings use prices captured from the reference shop on 2026-10-26 at your instruction. Confirm they are your selling prices, and set a routine to update them when supplier prices change.
+2. **Adopted prices** - approved on 2026-10-26 and protected from accidental overwrite. Name the person responsible for the weekly review recorded in Admin -> Price review.
 3. **Product photography and specifications** - none were supplied or copied; listings show a labelled placeholder and a "specifications pending" note until you provide them.
 4. **Delivery fee model** - nationwide delivery is offered with the fee agreed by phone. Decide whether to publish fixed fees per district instead (Admin -> Settings -> Delivery areas).
-5. **Payments** - confirm manual MTN MoMo verification is acceptable at launch, supply the Airtel Money merchant number, and decide whether to onboard the MTN MoMo API.
+5. **Payments** - confirm manual MTN MoMo and Airtel Money verification is acceptable at launch, confirm that Airtel number 0727 733 580 is an active Uthman IY receiving account, and decide whether to onboard the MTN MoMo API.
 6. **Opening hours**, street address and any registration/tax details to publish (phone numbers and email were confirmed on 2026-10-26).
 7. **Order terms and privacy notice** — written to match the implementation; legal review recommended.
 8. **Software product claims** — current statuses (MatchVision AI: in development; Digital Discipline:

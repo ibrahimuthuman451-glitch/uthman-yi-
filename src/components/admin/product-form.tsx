@@ -4,6 +4,8 @@ import { AdminActionForm } from "@/components/admin/action-form";
 import { saveProductAction } from "@/app/actions/admin-catalog";
 import { Checkbox, Field, Input, Select, Textarea } from "@/components/ui/field";
 import { formatSpecifications } from "@/lib/validation/content";
+import { formatRwf } from "@/lib/money";
+import { formatDate } from "@/lib/utils";
 import type { ActionState } from "@/lib/action-state";
 
 export function ProductForm({
@@ -78,6 +80,36 @@ export function ProductForm({
 
       <section className="rounded-2xl border border-navy-100 bg-white p-5">
         <h2 className="text-base font-semibold text-navy-900">Price and stock</h2>
+
+        {product ? (
+          <div className="mt-4 grid gap-3 rounded-xl border border-navy-100 bg-surface p-4 sm:grid-cols-2">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-navy-400">
+                Approved selling price
+              </p>
+              <p className="mt-1 text-base font-bold text-navy-900">
+                {formatRwf(product.priceRwf)}
+              </p>
+              <p className="mt-1 text-xs leading-5 text-muted">
+                This is what customers are charged in the shop, cart, checkout and order record.
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-navy-400">
+                Reference price (historical)
+              </p>
+              <p className="mt-1 text-base font-semibold text-navy-700">
+                {product.referencePriceRwf === null ? "Not recorded" : formatRwf(product.referencePriceRwf)}
+              </p>
+              <p className="mt-1 text-xs leading-5 text-muted">
+                {product.referencePriceRwf === null
+                  ? "No supplier reference price is stored for this listing."
+                  : `Context only - never charged. Captured ${formatDate(product.referenceRetrievedAt)} from ${product.referenceSource ?? "an unspecified source"}.`}
+              </p>
+            </div>
+          </div>
+        ) : null}
+
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Field
             label="Approved selling price (RWF)"
@@ -155,8 +187,8 @@ export function ProductForm({
         </div>
         {product?.referencePriceRwf ? (
           <p className="mt-3 rounded-lg border border-navy-100 bg-surface p-3 text-xs leading-5 text-navy-600">
-            Reference research price: {product.referencePriceRwf} RWF from {product.referenceSource ?? "unknown source"}. This is not an
-            Uthman IY price; enter your own approved price above.
+            Editing the approved price above does not change the stored reference price or its source; the
+            historical pair is kept for the weekly price review.
           </p>
         ) : null}
       </section>

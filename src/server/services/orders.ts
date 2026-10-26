@@ -157,6 +157,11 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
           subtotalRwf: pricing.subtotalRwf,
           deliveryFeeRwf: pricing.deliveryFeeRwf,
           totalRwf: pricing.totalRwf,
+          // A fee that is already known (fixed-fee area) is agreed by
+          // definition; the nationwide area leaves it to be agreed by phone.
+          deliveryFeeStatus: pricing.deliveryFeeRwf > 0 ? "AGREED" : "PENDING_AGREEMENT",
+          deliveryFeeAgreedRwf: pricing.deliveryFeeRwf > 0 ? pricing.deliveryFeeRwf : null,
+          deliveryFeeAgreedAt: pricing.deliveryFeeRwf > 0 ? new Date() : null,
           paymentReference: input.paymentReference?.trim() || null,
           idempotencyKey: input.idempotencyKey,
           items: {
@@ -467,6 +472,16 @@ export async function submitPaymentReference(input: {
   if (order.status === "CANCELLED") {
     return { ok: false, message: "This order was cancelled." };
   }
+  if (
+    order.paymentMethod !== "MANUAL_MOBILE_MONEY" &&
+    order.paymentMethod !== "MANUAL_AIRTEL_MONEY" &&
+    order.paymentMethod !== "BANK_TRANSFER"
+  ) {
+    return {
+      ok: false,
+      message: "This order does not use a manual payment method, so no transaction reference is needed.",
+    };
+  }
 
   await db.$transaction([
     db.order.update({
@@ -564,5 +579,78 @@ export async function getOrderStats() {
     paidRevenueRwf: revenue._sum.totalRwf ?? 0,
     newInquiries,
     lowStockCount: lowStock,
+  };
+}
+
+/**
+ * Records the delivery fee agreed with the customer by phone.
+ *
+ * Nationwide delivery has no published fee, so the order starts with
+ * PENDING_AGREEMENT and a products-only total. Staff record the agreed amount
+ * (or waive it) here; the server recalculates the total and writes an event.
+ * A paid order is never re-priced, because that would break reconciliation.
+ */
+export async function recordDeliveryFeeAgreement(input: {
+  orderId: string;
+  status: "AGREED" | "WAIVED";
+  agreedFeeRwf?: number | null;
+  note?: string;
+  actor: StaffActor;
+}): Promise<{ ok: boolean; message: string }> {
+  const order = await getOrderById(input.orderId);
+  if (!order) return { ok: false, message: "Order not found." };
+  if (order.status === "CANCELLED" || order.status === "COMPLETED") {
+    return { ok: false, message: "A cancelled or completed order cannot be re-priced." };
+  }
+  if (order.paymentStatus === "PAID") {
+    return {
+      ok: false,
+      message:
+        "This order is already paid, so the delivery fee cannot be changed. Record the difference in an internal note instead.",
+    };
+  }
+
+  const fee = input.status === "WAIVED" ? 0 : input.agreedFeeRwf;
+  if (fee === null || fee === undefined || !Number.isInteger(fee) || fee < 0) {
+    return { ok: false, message: "Enter the agreed delivery fee in whole Rwandan francs." };
+  }
+  if (fee > 5_000_000) {
+    return { ok: false, message: "That delivery fee looks incorrect. Check the amount and try again." };
+  }
+
+  const total = order.subtotalRwf + fee;
+
+  await db.$transaction(async (tx) => {
+    await tx.order.update({
+      where: { id: order.id },
+      data: {
+        deliveryFeeStatus: input.status,
+        deliveryFeeAgreedRwf: fee,
+        deliveryFeeAgreedAt: new Date(),
+        deliveryFeeAgreedBy: input.actor.email,
+        deliveryFeeRwf: fee,
+        totalRwf: total,
+      },
+    });
+    await tx.orderEvent.create({
+      data: {
+        orderId: order.id,
+        type: input.status === "WAIVED" ? "DELIVERY_FEE_WAIVED" : "DELIVERY_FEE_AGREED",
+        message:
+          input.status === "WAIVED"
+            ? `Delivery fee waived by phone.${input.note ? ` Note: ${input.note}` : ""}`
+            : `Delivery fee agreed by phone: ${fee} RWF. Order total is now ${total} RWF.${input.note ? ` Note: ${input.note}` : ""}`,
+        actorId: input.actor.id,
+        actorLabel: input.actor.email,
+      },
+    });
+  });
+
+  return {
+    ok: true,
+    message:
+      input.status === "WAIVED"
+        ? "Delivery fee waived; the order total is now the products total."
+        : `Delivery fee recorded. Order total updated to ${total} RWF.`,
   };
 }

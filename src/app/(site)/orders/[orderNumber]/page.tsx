@@ -7,10 +7,12 @@ import { getSiteSettings } from "@/lib/settings";
 import { formatRwf } from "@/lib/money";
 import { formatDateTime, toInternationalPhone } from "@/lib/utils";
 import {
+  deliveryFeeStatusLabels,
   orderStatusLabels,
   paymentMethodLabels,
   paymentStatusLabels,
 } from "@/lib/constants";
+import { acceptsPaymentReference, paymentInstructions } from "@/lib/payments/instructions";
 import { Badge } from "@/components/ui/badge";
 import { Alert } from "@/components/ui/alert";
 import { buttonClasses } from "@/components/ui/button";
@@ -55,8 +57,8 @@ export default async function OrderPage({
 
   const currentStep = STATUS_STEPS.indexOf(order.status as (typeof STATUS_STEPS)[number]);
   const needsPayment = order.paymentStatus !== "PAID" && order.status !== "CANCELLED";
-  const showReferenceForm =
-    needsPayment && (order.paymentMethod === "MANUAL_MOBILE_MONEY" || order.paymentMethod === "BANK_TRANSFER");
+  const showReferenceForm = needsPayment && acceptsPaymentReference(order.paymentMethod);
+  const deliveryFeePending = order.deliveryFeeStatus === "PENDING_AGREEMENT";
 
   return (
     <div className="bg-surface">
@@ -82,6 +84,9 @@ export default async function OrderPage({
             </Badge>
             <Badge tone={paymentStatusTone(order.paymentStatus)}>
               {paymentStatusLabels[order.paymentStatus]}
+            </Badge>
+            <Badge tone={order.deliveryFeeStatus === "PENDING_AGREEMENT" ? "warning" : "neutral"}>
+              {deliveryFeeStatusLabels[order.deliveryFeeStatus]}
             </Badge>
           </div>
         </div>
@@ -141,11 +146,15 @@ export default async function OrderPage({
                 <div className="flex justify-between gap-3">
                   <dt className="text-muted">Delivery ({order.deliveryAreaName})</dt>
                   <dd className="text-right text-navy-900">
-                    {order.deliveryFeeRwf === 0 ? "Confirmed by phone" : formatRwf(order.deliveryFeeRwf)}
+                    {order.deliveryFeeStatus === "PENDING_AGREEMENT"
+                      ? "Confirmed by phone"
+                      : order.deliveryFeeStatus === "WAIVED"
+                        ? "Waived"
+                        : formatRwf(order.deliveryFeeRwf)}
                   </dd>
                 </div>
                 <div className="flex justify-between border-t border-navy-100 pt-2 text-base font-bold text-navy-900">
-                  <dt>{order.deliveryFeeRwf === 0 ? "Products total" : "Total"}</dt>
+                  <dt>{deliveryFeePending ? "Products total" : "Total"}</dt>
                   <dd>{formatRwf(order.totalRwf)}</dd>
                 </div>
               </dl>
@@ -206,13 +215,7 @@ export default async function OrderPage({
 
               {needsPayment ? (
                 <div className="mt-4 rounded-xl bg-surface p-4 text-xs leading-5 text-navy-700">
-                  {order.paymentMethod === "CASH_ON_DELIVERY"
-                    ? settings.payments.cashOnDelivery.instructions
-                    : order.paymentMethod === "MANUAL_MOBILE_MONEY"
-                      ? `${settings.payments.manualMobileMoney.instructions} Numbers: ${[settings.payments.manualMobileMoney.mtnNumber, settings.payments.manualMobileMoney.airtelNumber].filter(Boolean).join(" / ")}`
-                      : order.paymentMethod === "BANK_TRANSFER"
-                        ? `${settings.payments.bankTransfer.instructions} ${settings.payments.bankTransfer.bankName} · ${settings.payments.bankTransfer.accountName} · ${settings.payments.bankTransfer.accountNumber}`
-                        : "Your payment is being confirmed by the payment provider. This page will show the result once confirmed."}
+                  {paymentInstructions(order.paymentMethod, settings)}
                 </div>
               ) : null}
 

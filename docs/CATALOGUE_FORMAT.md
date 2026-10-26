@@ -67,6 +67,25 @@ reported and skipped, valid rows are applied. Nothing is ever deleted by an impo
 5. Unknown categories fail the row instead of inventing a category.
 6. The import itself is recorded in the audit log with counts and error totals.
 
+### Approved prices are never overwritten by accident
+
+An existing product keeps its **approved selling price**, publication state, featured flag, stock
+count and low-stock threshold when a file is imported again. Only descriptive fields (name,
+description, specifications, category, reference provenance) are refreshed, so a routine weekly
+re-import or `npm run catalogue:apply` cannot undo an administrator's price change.
+
+To re-price deliberately:
+
+- in the admin import screen, tick **Overwrite existing approved prices**; or
+- run `npx tsx --tsconfig tsconfig.scripts.json scripts/import-owner-catalogue.ts --update-prices`.
+
+The import response reports how many prices were preserved, and the audit entry records whether
+re-pricing was requested.
+
+`npm run catalogue:apply` also accepts `-- --apply-settings` to re-apply the store settings
+(stock mode, delivery area, payment instructions). Settings are skipped by default for the same
+reason: an import must not revert configuration that an administrator changed later.
+
 ## CSV export
 
 Columns: `sku,name,slug,categorySlug,priceRwf,stock,lowStockThreshold,dataStatus,isPublished,imageUrl`.

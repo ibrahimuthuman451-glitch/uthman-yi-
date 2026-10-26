@@ -137,6 +137,7 @@ export function parseCartPayload(json: string): z.SafeParseReturnType<unknown, z
 export const paymentMethodSchema = z.enum([
   "CASH_ON_DELIVERY",
   "MANUAL_MOBILE_MONEY",
+  "MANUAL_AIRTEL_MONEY",
   "BANK_TRANSFER",
   "MTN_MOMO_API",
 ]);

@@ -123,11 +123,13 @@ scripts/                    dev database, smoke test, link checker
 - Dashboard: orders, paid revenue, awaiting payment, low stock, new inquiries and a launch checklist
 - Products: create/edit/archive, approved price, stock + low-stock threshold, stock movements, specifications, publish/feature flags, demo/reference/approved status
 - Categories: create/edit, ordering, visibility
-- Orders: search, filter, detail view, fulfilment status, cancellation with stock return, verified manual payment recording
+- Orders: search, filter, detail view, fulfilment status, cancellation with stock return, verified manual payment recording, and recording the delivery fee agreed by phone
 - Inquiries: search/filter, detail view, status and internal notes
 - Content: software products, services, homepage wording, contact details, delivery areas, payment settings
 - Catalogue: documented JSON import (validated, never auto-publishes) and JSON/CSV export
 - Reference research: imported third-party listings with provenance, convertible into unpublished drafts
+- Price review: weekly reference-price schedule with due/overdue reminders, honest review recording and approved-vs-reference price comparison
+- Payments: separate MTN MoMo and Airtel Money manual-verification methods, each with its own receiving number and verification status
 - Staff accounts (ADMIN/STAFF roles) and an audit log of privileged actions
 
 ---
@@ -151,7 +153,7 @@ scripts/                    dev database, smoke test, link checker
 | `npm run db:seed` | Seed (development: demo listings allowed) |
 | `npm run db:seed:prod` | Seed for production: refuses demo listings and the example admin password |
 | `npm run db:studio` | Prisma Studio |
-| `npm run catalogue:apply` | Re-apply the owner-approved catalogue + launch settings (idempotent; `-- --remove-demo` also removes demo listings) |
+| `npm run catalogue:apply` | Re-import the owner-approved catalogue (idempotent; approved prices, stock and publication flags are preserved). Add `-- --apply-settings` to re-apply store settings, or `-- --update-prices` to overwrite prices deliberately |
 
 ### Database options
 
@@ -167,7 +169,7 @@ scripts/                    dev database, smoke test, link checker
 ```bash
 npm run typecheck
 npm run lint
-npm test                 # 50 tests: pricing, availability, validation, payment gating, orders, inquiries, import
+npm test                 # 78 tests: pricing, availability, validation, payment gating, orders, delivery fees, price review, imports, authorization
 npm run build
 npm start &              # then:
 npm run smoke            # 34 HTTP checks
@@ -240,8 +242,8 @@ See `public/brand/README.md` for the verification details.
 
 See `docs/PROJECT_STATUS.md` for the complete list. The blocking items before a real launch are:
 
-1. Re-check the adopted prices before launch and update them when supplier prices change; supply product photography and any verified specifications (listings currently show placeholders and "specifications pending").
-2. Delivery fee amount(s): the shop currently offers nationwide delivery with the fee agreed by phone. Add fixed-fee areas in Admin -> Settings if a published price list is preferred.
+1. Product photography and verified specifications (listings currently show labelled placeholders and “specifications pending”); prices are approved and reviewed through the weekly workflow in Admin → Price review.
+2. Delivery fee amount(s): the shop offers nationwide delivery with the fee agreed by phone. Add fixed-fee areas in Admin → Settings if a published price list is preferred.
 3. SMTP/email delivery for automatic form notifications (the published address is set; no mail transport is configured yet).
-4. The Airtel Money merchant number (MTN MoMo 0780551125 is configured) and, if automatic payment confirmation is wanted, MTN MoMo Collections API credentials.
+4. Confirm that Airtel Money number **0727 733 580** is a valid Uthman IY receiving account (it is configured but marked unverified), and provide MTN MoMo Collections API credentials only if automatic payment confirmation is wanted.
 5. Optional image storage for product photography.

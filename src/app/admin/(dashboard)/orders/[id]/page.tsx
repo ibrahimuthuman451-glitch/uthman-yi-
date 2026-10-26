@@ -2,7 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getOrderById } from "@/server/services/orders";
 import { AdminActionForm } from "@/components/admin/action-form";
-import { confirmPaymentAction, updateOrderStatusAction } from "@/app/actions/admin-orders";
+import {
+  confirmPaymentAction,
+  recordDeliveryFeeAction,
+  updateOrderStatusAction,
+} from "@/app/actions/admin-orders";
 import type { ActionState } from "@/lib/action-state";
 import { Field, Input, Select } from "@/components/ui/field";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +14,7 @@ import { Alert } from "@/components/ui/alert";
 import { formatRwf } from "@/lib/money";
 import { formatDateTime } from "@/lib/utils";
 import {
+  deliveryFeeStatusLabels,
   orderStatusLabels,
   paymentMethodLabels,
   paymentStatusLabels,
@@ -40,6 +45,9 @@ export default async function AdminOrderDetailPage({
           </Badge>
           <Badge tone={order.paymentStatus === "PAID" ? "success" : order.paymentStatus === "FAILED" ? "danger" : "warning"}>
             {paymentStatusLabels[order.paymentStatus]}
+          </Badge>
+          <Badge tone={order.deliveryFeeStatus === "PENDING_AGREEMENT" ? "warning" : "neutral"}>
+            {deliveryFeeStatusLabels[order.deliveryFeeStatus]}
           </Badge>
         </div>
         <p className="mt-1 text-xs text-navy-500">Placed {formatDateTime(order.createdAt)}</p>
@@ -80,10 +88,18 @@ export default async function AdminOrderDetailPage({
                   <td colSpan={3} className="px-5 py-2 text-right text-navy-500">
                     Delivery ({order.deliveryAreaName})
                   </td>
-                  <td className="px-5 py-2 text-right tabular-nums">{formatRwf(order.deliveryFeeRwf)}</td>
+                  <td className="px-5 py-2 text-right tabular-nums">
+                    {order.deliveryFeeStatus === "PENDING_AGREEMENT"
+                      ? "To be agreed"
+                      : order.deliveryFeeStatus === "WAIVED"
+                        ? "Waived"
+                        : formatRwf(order.deliveryFeeRwf)}
+                  </td>
                 </tr>
                 <tr>
-                  <td colSpan={3} className="px-5 py-2 text-right font-semibold text-navy-900">Total</td>
+                  <td colSpan={3} className="px-5 py-2 text-right font-semibold text-navy-900">
+                    {order.deliveryFeeStatus === "PENDING_AGREEMENT" ? "Products total" : "Total"}
+                  </td>
                   <td className="px-5 py-2 text-right font-bold tabular-nums">{formatRwf(order.totalRwf)}</td>
                 </tr>
               </tfoot>
@@ -119,6 +135,21 @@ export default async function AdminOrderDetailPage({
                   <dd className="whitespace-pre-line text-navy-900">{order.deliveryNotes}</dd>
                 </div>
               ) : null}
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-navy-400">Delivery fee</dt>
+                <dd className="text-navy-900">
+                  {deliveryFeeStatusLabels[order.deliveryFeeStatus]}
+                  {order.deliveryFeeStatus === "AGREED" && order.deliveryFeeAgreedRwf !== null
+                    ? ` - ${formatRwf(order.deliveryFeeAgreedRwf)}`
+                    : ""}
+                  {order.deliveryFeeAgreedBy ? (
+                    <span className="block text-xs text-navy-500">
+                      Recorded by {order.deliveryFeeAgreedBy}
+                      {order.deliveryFeeAgreedAt ? ` on ${formatDateTime(order.deliveryFeeAgreedAt)}` : ""}
+                    </span>
+                  ) : null}
+                </dd>
+              </div>
               <div>
                 <dt className="text-xs uppercase tracking-wide text-navy-400">Payment method</dt>
                 <dd className="text-navy-900">{paymentMethodLabels[order.paymentMethod]}</dd>
@@ -156,6 +187,52 @@ export default async function AdminOrderDetailPage({
         </div>
 
         <div className="space-y-5">
+          <section className="rounded-2xl border border-navy-100 bg-white p-5">
+            <h2 className="text-base font-semibold text-navy-900">Delivery fee</h2>
+            <p className="mt-1 text-xs leading-5 text-muted">
+              Delivery is agreed by phone. Recording the agreed amount updates the order total on the server; it does not
+              mark the order paid or delivered.
+            </p>
+            {order.paymentStatus !== "PAID" &&
+            order.status !== "CANCELLED" &&
+            order.status !== "COMPLETED" ? (
+              <div className="mt-4">
+                <AdminActionForm
+                  action={recordDeliveryFeeAction as (prev: ActionState, formData: FormData) => Promise<ActionState>}
+                  submitLabel="Save delivery fee"
+                >
+                  <input type="hidden" name="orderId" value={order.id} />
+                  <Field label="Outcome" htmlFor="deliveryFeeStatus" required>
+                    <Select
+                      id="deliveryFeeStatus"
+                      name="status"
+                      defaultValue={order.deliveryFeeStatus === "WAIVED" ? "WAIVED" : "AGREED"}
+                    >
+                      <option value="AGREED">Fee agreed with the customer</option>
+                      <option value="WAIVED">Delivery waived</option>
+                    </Select>
+                  </Field>
+                  <Field label="Agreed fee (RWF)" htmlFor="agreedFee" hint="Required when a fee was agreed. Leave blank when waiving.">
+                    <Input
+                      id="agreedFee"
+                      name="agreedFee"
+                      inputMode="numeric"
+                      defaultValue={order.deliveryFeeAgreedRwf ?? ""}
+                      placeholder="e.g. 5000"
+                    />
+                  </Field>
+                  <Field label="Note (optional)" htmlFor="deliveryFeeNote">
+                    <Input id="deliveryFeeNote" name="note" maxLength={500} placeholder="Agreed with the customer on the phone" />
+                  </Field>
+                </AdminActionForm>
+              </div>
+            ) : (
+              <Alert tone="info" className="mt-3">
+                This order is already paid, so its delivery fee and total are locked to keep the payment record consistent.
+              </Alert>
+            )}
+          </section>
+
           <section className="rounded-2xl border border-navy-100 bg-white p-5">
             <h2 className="text-base font-semibold text-navy-900">Update fulfilment</h2>
             <div className="mt-4">

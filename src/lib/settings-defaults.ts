@@ -36,10 +36,24 @@ export type SiteSettings = {
   };
   payments: {
     cashOnDelivery: { enabled: boolean; instructions: string };
+    /**
+     * MTN MoMo is verified manually: the customer pays the merchant number and
+     * submits the transaction reference, which staff must confirm.
+     */
     manualMobileMoney: {
       enabled: boolean;
       mtnNumber: string;
-      airtelNumber: string;
+      instructions: string;
+    };
+    /**
+     * Airtel Money is a separate manual method with its own receiving number.
+     * `verified` records whether the business has confirmed that the number is
+     * a valid Uthman IY receiving account; it is not an API integration.
+     */
+    manualAirtelMoney: {
+      enabled: boolean;
+      number: string;
+      verified: boolean;
       instructions: string;
     };
     bankTransfer: {
@@ -50,6 +64,19 @@ export type SiteSettings = {
       instructions: string;
     };
     mtnMomoApi: { enabled: boolean };
+  };
+  /**
+   * Weekly reference-price review. Uthman IY reviews supplier prices every
+   * seven days; reviewing existing information is recorded separately from a
+   * supplier-confirmed price because no automated supplier feed exists.
+   */
+  priceReview: {
+    intervalDays: number;
+    referenceCapturedAt: string | null;
+    lastReviewedAt: string | null;
+    lastReviewedBy: string;
+    lastReviewKind: "NONE" | "INTERNAL_CHECK" | "SUPPLIER_CONFIRMED";
+    lastReviewNote: string;
   };
   content: {
     heroEyebrow: string;
@@ -103,9 +130,18 @@ export const defaultSettings: SiteSettings = {
     manualMobileMoney: {
       enabled: true,
       mtnNumber: "0780551125",
-      airtelNumber: "",
       instructions:
-        "Send the total to the Uthman IY mobile money number, then enter the transaction reference at checkout. Our team verifies the payment before dispatch.",
+        "Send the products total by MTN MoMo to 0780551125, then submit the transaction reference from your SMS. Our team verifies the payment before dispatch.",
+    },
+    manualAirtelMoney: {
+      enabled: true,
+      // Supplied by the owner on 2026-10-26. The account has not been
+      // independently verified, so `verified` stays false until the business
+      // confirms it is a valid Uthman IY receiving number.
+      number: "0727733580",
+      verified: false,
+      instructions:
+        "Send the products total by Airtel Money to 0727 733 580, then submit the transaction reference from your SMS. Our team verifies the payment before dispatch.",
     },
     bankTransfer: {
       enabled: false,
@@ -116,6 +152,14 @@ export const defaultSettings: SiteSettings = {
         "Bank details will be published once the business account is confirmed. Until then, choose another payment method.",
     },
     mtnMomoApi: { enabled: false },
+  },
+  priceReview: {
+    intervalDays: 7,
+    referenceCapturedAt: "2026-10-26T08:45:00.000Z",
+    lastReviewedAt: null,
+    lastReviewedBy: "",
+    lastReviewKind: "NONE",
+    lastReviewNote: "",
   },
   content: {
     heroEyebrow: "Technology company · Gisozi, Kigali",

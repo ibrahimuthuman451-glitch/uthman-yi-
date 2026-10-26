@@ -4,6 +4,8 @@ import {
   confirmManualPayment,
   createOrder,
   getOrderByNumber,
+  recordDeliveryFeeAgreement,
+  submitPaymentReference,
   trackOrder,
   updateOrderStatus,
 } from "@/server/services/orders";
@@ -19,6 +21,7 @@ let categoryId = "";
 let productId = "";
 let referenceProductId = "";
 let deliveryAreaId = "";
+let zeroFeeAreaId = "";
 const createdOrderIds: string[] = [];
 
 let actor: { id: string; name: string; email: string } = { id: "", name: "Test Staff", email: "" };
@@ -100,6 +103,11 @@ beforeAll(async () => {
   });
   deliveryAreaId = area.id;
 
+  const zeroFeeArea = await db.deliveryArea.create({
+    data: { name: `Nationwide test area ${suffix}`, feeRwf: 0, isActive: true },
+  });
+  zeroFeeAreaId = zeroFeeArea.id;
+
   // Order events reference a real staff account (foreign key enforced).
   const staff = await db.user.create({
     data: {
@@ -116,7 +124,7 @@ afterAll(async () => {
   await db.order.deleteMany({ where: { id: { in: createdOrderIds } } });
   await db.stockMovement.deleteMany({ where: { productId: { in: [productId, referenceProductId] } } });
   await db.product.deleteMany({ where: { id: { in: [productId, referenceProductId] } } });
-  await db.deliveryArea.deleteMany({ where: { id: deliveryAreaId } });
+  await db.deliveryArea.deleteMany({ where: { id: { in: [deliveryAreaId, zeroFeeAreaId] } } });
   await db.category.deleteMany({ where: { id: categoryId } });
   await db.user.deleteMany({ where: { id: actor.id } });
   if (originalSettings) {
@@ -328,5 +336,185 @@ describe("order lifecycle", () => {
       contact: "someone-else@test.local",
     });
     expect(wrong).toBeNull();
+  });
+});
+
+describe("approved selling price vs reference price", () => {
+  it("charges the approved selling price and never the historical reference price", async () => {
+    await setSiteSettings({ stockMode: "TRACKED", cashOnDelivery: true });
+    const product = await db.product.create({
+      data: {
+        name: `Priced product ${suffix}`,
+        slug: `priced-product-${suffix}`,
+        sku: `PRICED-${suffix}`,
+        categoryId,
+        priceRwf: 111_000,
+        referencePriceRwf: 77_777,
+        referenceSource: "test supplier reference",
+        referenceRetrievedAt: new Date("2026-10-26T08:45:00Z"),
+        stock: 5,
+        dataStatus: "APPROVED",
+        isPublished: true,
+      },
+    });
+
+    const created = await createOrder(
+      baseInput({
+        items: [{ productId: product.id, quantity: 2 }],
+        idempotencyKey: `price-${suffix}`,
+      }),
+    );
+    expect(created.ok).toBe(true);
+    if (!created.ok) return;
+    createdOrderIds.push(created.order.id);
+
+    expect(created.order.items[0].unitPriceRwf).toBe(111_000);
+    expect(created.order.items[0].lineTotalRwf).toBe(222_000);
+    expect(created.order.subtotalRwf).toBe(222_000);
+    expect(created.order.totalRwf).toBe(224_000); // + 2,000 test delivery fee
+    expect(created.order.totalRwf).not.toBe(2 * 77_777 + 2_000);
+
+    // The stored order keeps the approved price, not the reference price.
+    const stored = await getOrderByNumber(created.order.orderNumber);
+    expect(stored?.items[0].unitPriceRwf).toBe(111_000);
+
+    await db.order.delete({ where: { id: created.order.id } });
+    await db.stockMovement.deleteMany({ where: { productId: product.id } });
+    await db.product.delete({ where: { id: product.id } });
+  });
+});
+
+describe("delivery agreed by phone", () => {
+  it("keeps the delivery fee pending and records the agreed amount on the server", async () => {
+    await setSiteSettings({ stockMode: "TRACKED", cashOnDelivery: true });
+    await resetStock(10);
+
+    const created = await createOrder(
+      baseInput({
+        items: [{ productId, quantity: 1 }],
+        deliveryAreaId: zeroFeeAreaId,
+        idempotencyKey: `delivery-${suffix}`,
+      }),
+    );
+    expect(created.ok).toBe(true);
+    if (!created.ok) return;
+    createdOrderIds.push(created.order.id);
+
+    expect(created.order.deliveryFeeStatus).toBe("PENDING_AGREEMENT");
+    expect(created.order.deliveryFeeRwf).toBe(0);
+    expect(created.order.totalRwf).toBe(created.order.subtotalRwf);
+
+    const agreed = await recordDeliveryFeeAgreement({
+      orderId: created.order.id,
+      status: "AGREED",
+      agreedFeeRwf: 7_000,
+      note: "Agreed by phone",
+      actor,
+    });
+    expect(agreed.ok).toBe(true);
+
+    const afterAgreement = await getOrderByNumber(created.order.orderNumber);
+    expect(afterAgreement?.deliveryFeeStatus).toBe("AGREED");
+    expect(afterAgreement?.deliveryFeeAgreedRwf).toBe(7_000);
+    expect(afterAgreement?.deliveryFeeRwf).toBe(7_000);
+    expect(afterAgreement?.totalRwf).toBe((afterAgreement?.subtotalRwf ?? 0) + 7_000);
+    expect(afterAgreement?.deliveryFeeAgreedBy).toBe(actor.email);
+    expect(
+      afterAgreement?.events.some((event) => event.type === "DELIVERY_FEE_AGREED"),
+    ).toBe(true);
+
+    // Agreeing a delivery fee must not be confused with payment or delivery.
+    expect(afterAgreement?.paymentStatus).toBe("UNPAID");
+    expect(afterAgreement?.status).toBe("PENDING_PAYMENT");
+
+    const waived = await recordDeliveryFeeAgreement({
+      orderId: created.order.id,
+      status: "WAIVED",
+      actor,
+    });
+    expect(waived.ok).toBe(true);
+    const afterWaiver = await getOrderByNumber(created.order.orderNumber);
+    expect(afterWaiver?.deliveryFeeStatus).toBe("WAIVED");
+    expect(afterWaiver?.deliveryFeeRwf).toBe(0);
+    expect(afterWaiver?.totalRwf).toBe(afterWaiver?.subtotalRwf);
+  });
+
+  it("refuses to re-price a paid order", async () => {
+    await resetStock(10);
+    const created = await createOrder(
+      baseInput({ idempotencyKey: `delivery-paid-${suffix}` }),
+    );
+    expect(created.ok).toBe(true);
+    if (!created.ok) return;
+    createdOrderIds.push(created.order.id);
+
+    const paid = await confirmManualPayment({
+      orderId: created.order.id,
+      paymentReference: `PAID-${suffix}`,
+      actor,
+    });
+    expect(paid.ok).toBe(true);
+
+    const result = await recordDeliveryFeeAgreement({
+      orderId: created.order.id,
+      status: "AGREED",
+      agreedFeeRwf: 3_000,
+      actor,
+    });
+    expect(result.ok).toBe(false);
+    expect(result.message).toMatch(/already paid/i);
+  });
+});
+
+describe("Airtel Money manual verification", () => {
+  it("stays pending when the customer submits a reference and is only paid after staff verification", async () => {
+    await setSiteSettings({ stockMode: "TRACKED", cashOnDelivery: true });
+    await resetStock(10);
+
+    const created = await createOrder(
+      baseInput({
+        paymentMethod: "MANUAL_AIRTEL_MONEY",
+        idempotencyKey: `airtel-${suffix}`,
+      }),
+    );
+    expect(created.ok).toBe(true);
+    if (!created.ok) return;
+    createdOrderIds.push(created.order.id);
+
+    expect(created.order.paymentMethod).toBe("MANUAL_AIRTEL_MONEY");
+    expect(created.order.paymentStatus).toBe("PENDING");
+    expect(created.order.status).toBe("PENDING_PAYMENT");
+
+    const submitted = await submitPaymentReference({
+      orderNumber: created.order.orderNumber,
+      paymentReference: `AIRTEL-${suffix}`,
+    });
+    expect(submitted.ok).toBe(true);
+
+    const afterReference = await getOrderByNumber(created.order.orderNumber);
+    expect(afterReference?.paymentReference).toBe(`AIRTEL-${suffix}`);
+    expect(afterReference?.paymentStatus).toBe("PENDING");
+    expect(afterReference?.status).toBe("PENDING_PAYMENT");
+    expect(afterReference?.paidAt).toBeNull();
+
+    // Only an authorised staff verification can mark it paid.
+    const confirmed = await confirmManualPayment({
+      orderId: created.order.id,
+      paymentReference: `AIRTEL-${suffix}`,
+      note: "Verified in the Airtel statement",
+      actor,
+    });
+    expect(confirmed.ok).toBe(true);
+
+    const paid = await getOrderByNumber(created.order.orderNumber);
+    expect(paid?.paymentStatus).toBe("PAID");
+    expect(paid?.paymentConfirmedBy).toBe(actor.email);
+
+    // A customer cannot re-submit evidence on a paid order.
+    const resubmit = await submitPaymentReference({
+      orderNumber: created.order.orderNumber,
+      paymentReference: "second-reference",
+    });
+    expect(resubmit.ok).toBe(false);
   });
 });

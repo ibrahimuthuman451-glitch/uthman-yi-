@@ -7,6 +7,7 @@ import { AdminActionForm } from "@/components/admin/action-form";
 import type { ActionState } from "@/lib/action-state";
 import { Checkbox, Field, Input, Select, Textarea } from "@/components/ui/field";
 import { Alert } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { formatDeliveryAreaLines } from "@/lib/validation/settings-lines";
 
 export const dynamic = "force-dynamic";
@@ -135,18 +136,44 @@ export default async function AdminSettingsPage() {
                 </Field>
               </div>
               <div className="rounded-xl border border-navy-100 p-4">
-                <Checkbox id="manualMomoEnabled" name="manualMomoEnabled" defaultChecked={settings.payments.manualMobileMoney.enabled} label="Enable mobile money with manual verification" />
-                <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  <Field label="MTN MoMo merchant number" htmlFor="manualMtnNumber">
-                    <Input id="manualMtnNumber" name="manualMtnNumber" defaultValue={settings.payments.manualMobileMoney.mtnNumber} />
-                  </Field>
-                  <Field label="Airtel Money merchant number" htmlFor="manualAirtelNumber">
-                    <Input id="manualAirtelNumber" name="manualAirtelNumber" defaultValue={settings.payments.manualMobileMoney.airtelNumber} />
-                  </Field>
-                </div>
-                <Field label="Mobile money instructions" htmlFor="manualMomoInstructions" className="mt-3">
+                <Checkbox id="manualMomoEnabled" name="manualMomoEnabled" defaultChecked={settings.payments.manualMobileMoney.enabled} label="Enable MTN MoMo (manual verification)" />
+                <Field label="MTN MoMo receiving number" htmlFor="manualMtnNumber" className="mt-3">
+                  <Input id="manualMtnNumber" name="manualMtnNumber" defaultValue={settings.payments.manualMobileMoney.mtnNumber} />
+                </Field>
+                <Field label="MTN MoMo instructions" htmlFor="manualMomoInstructions" className="mt-3">
                   <Textarea id="manualMomoInstructions" name="manualMomoInstructions" rows={2} defaultValue={settings.payments.manualMobileMoney.instructions} maxLength={600} />
                 </Field>
+                <p className="mt-2 text-xs leading-5 text-muted">
+                  Customers pay the number above and submit the SMS reference. Orders stay pending until a staff member verifies the money.
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-navy-100 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Checkbox id="airtelMoneyEnabled" name="airtelMoneyEnabled" defaultChecked={settings.payments.manualAirtelMoney.enabled} label="Enable Airtel Money (manual verification)" />
+                  <Badge tone={settings.payments.manualAirtelMoney.verified ? "success" : "warning"}>
+                    {settings.payments.manualAirtelMoney.verified ? "Receiving account confirmed" : "Receiving account not verified"}
+                  </Badge>
+                </div>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <Field label="Airtel Money receiving number" htmlFor="airtelMoneyNumber" hint="Rwandan mobile number, e.g. 0727 733 580">
+                    <Input id="airtelMoneyNumber" name="airtelMoneyNumber" defaultValue={settings.payments.manualAirtelMoney.number} />
+                  </Field>
+                  <div className="flex items-end pb-2">
+                    <Checkbox
+                      id="airtelMoneyVerified"
+                      name="airtelMoneyVerified"
+                      defaultChecked={settings.payments.manualAirtelMoney.verified}
+                      label="I have confirmed this is a valid Uthman IY receiving account"
+                    />
+                  </div>
+                </div>
+                <Field label="Airtel Money instructions" htmlFor="airtelMoneyInstructions" className="mt-3">
+                  <Textarea id="airtelMoneyInstructions" name="airtelMoneyInstructions" rows={2} defaultValue={settings.payments.manualAirtelMoney.instructions} maxLength={600} />
+                </Field>
+                <p className="mt-2 text-xs leading-5 text-muted">
+                  This is a manual method, not an Airtel API integration. The receiving account was supplied by the owner and must be confirmed before the business relies on it for payments. Selecting Airtel Money, entering a reference or sending a screenshot never marks an order paid; only staff verification does.
+                </p>
               </div>
               <div className="rounded-xl border border-navy-100 p-4">
                 <Checkbox id="bankTransferEnabled" name="bankTransferEnabled" defaultChecked={settings.payments.bankTransfer.enabled} label="Enable bank transfer" />

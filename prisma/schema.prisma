@@ -50,8 +50,17 @@ enum PaymentStatus {
 enum PaymentMethod {
   CASH_ON_DELIVERY
   MANUAL_MOBILE_MONEY
+  MANUAL_AIRTEL_MONEY
   BANK_TRANSFER
   MTN_MOMO_API
+}
+
+/// Delivery is agreed by phone for nationwide orders, so the fee has an
+/// explicit state rather than being silently assumed to be zero.
+enum DeliveryFeeStatus {
+  PENDING_AGREEMENT
+  AGREED
+  WAIVED
 }
 
 enum InquiryType {
@@ -208,6 +217,11 @@ model Order {
   subtotalRwf        Int
   deliveryFeeRwf     Int           @default(0)
   totalRwf           Int
+  deliveryFeeStatus  DeliveryFeeStatus @default(PENDING_AGREEMENT)
+  /// Amount agreed with the customer by phone (null until agreed).
+  deliveryFeeAgreedRwf Int?
+  deliveryFeeAgreedAt  DateTime?
+  deliveryFeeAgreedBy  String?
   // Customer reference for manual transfers / mobile money payments.
   paymentReference   String?
   // Provider-side identifier (e.g. MTN referenceId) when an API integration runs.

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { emailSchema, normalizeRwandaPhone, optionalEmailSchema } from "./forms";
+import { emailSchema, normalizeRwandaPhone, optionalEmailSchema, optionalPhoneSchema } from "./forms";
 
 export const settingsFormSchema = z.object({
   companyName: z.string().trim().min(2).max(80),
@@ -42,9 +42,12 @@ export const settingsFormSchema = z.object({
   cashOnDeliveryEnabled: z.boolean(),
   cashOnDeliveryInstructions: z.string().trim().max(600).optional().default(""),
   manualMomoEnabled: z.boolean(),
-  manualMtnNumber: z.string().trim().max(30).optional().default(""),
-  manualAirtelNumber: z.string().trim().max(30).optional().default(""),
+  manualMtnNumber: optionalPhoneSchema,
   manualMomoInstructions: z.string().trim().max(600).optional().default(""),
+  airtelMoneyEnabled: z.boolean(),
+  airtelMoneyNumber: optionalPhoneSchema,
+  airtelMoneyVerified: z.boolean(),
+  airtelMoneyInstructions: z.string().trim().max(600).optional().default(""),
   bankTransferEnabled: z.boolean(),
   bankName: z.string().trim().max(120).optional().default(""),
   bankAccountName: z.string().trim().max(120).optional().default(""),
@@ -58,6 +61,21 @@ export const settingsFormSchema = z.object({
   announcement: z.string().trim().max(200).optional().default(""),
   // One delivery area per line: "Name | Fee in RWF | active|inactive".
   deliveryAreas: z.string().trim().max(4000).optional().default(""),
+}).superRefine((value, ctx) => {
+  if (value.manualMomoEnabled && !value.manualMtnNumber) {
+    ctx.addIssue({
+      path: ["manualMtnNumber"],
+      code: z.ZodIssueCode.custom,
+      message: "Enter the MTN MoMo receiving number, or disable MTN MoMo",
+    });
+  }
+  if (value.airtelMoneyEnabled && !value.airtelMoneyNumber) {
+    ctx.addIssue({
+      path: ["airtelMoneyNumber"],
+      code: z.ZodIssueCode.custom,
+      message: "Enter the Airtel Money receiving number, or disable Airtel Money",
+    });
+  }
 });
 
 export const orderUpdateSchema = z.object({

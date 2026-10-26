@@ -60,6 +60,7 @@ export default async function CheckoutPage() {
                 description: option.description,
                 instructions: option.instructions,
                 requiresReference: option.requiresReference,
+                receivingNumber: option.receivingNumber ?? null,
               }))}
               maxQuantityPerItem={settings.store.maxQuantityPerItem}
               bankDetails={
@@ -71,10 +72,6 @@ export default async function CheckoutPage() {
                     }
                   : null
               }
-              mobileMoneyNumbers={{
-                mtn: settings.payments.manualMobileMoney.mtnNumber,
-                airtel: settings.payments.manualMobileMoney.airtelNumber,
-              }}
               deliveryNotice={settings.store.deliveryNotice}
             />
           )}

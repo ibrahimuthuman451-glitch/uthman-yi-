@@ -128,15 +128,30 @@ export async function exportCatalogueCsv(): Promise<string> {
 export type ImportSummary = {
   created: number;
   updated: number;
+  /** Existing rows whose approved price was left untouched by this import. */
+  pricesPreserved: number;
   errors: { index: number; name: string; message: string }[];
 };
 
-export async function importCatalogue(rawPayload: unknown): Promise<ImportSummary> {
+export type ImportOptions = {
+  /**
+   * Explicitly allow an import to overwrite approved selling prices.
+   * Default false: a routine re-import (for example the weekly price review or
+   * `npm run catalogue:apply`) must never undo an administrator's price change.
+   */
+  updatePrices?: boolean;
+};
+
+export async function importCatalogue(
+  rawPayload: unknown,
+  options: ImportOptions = {},
+): Promise<ImportSummary> {
   const parsed = importPayloadSchema.safeParse(rawPayload);
   if (!parsed.success) {
     return {
       created: 0,
       updated: 0,
+      pricesPreserved: 0,
       errors: [
         {
           index: 0,
@@ -149,7 +164,7 @@ export async function importCatalogue(rawPayload: unknown): Promise<ImportSummar
     };
   }
 
-  const summary: ImportSummary = { created: 0, updated: 0, errors: [] };
+  const summary: ImportSummary = { created: 0, updated: 0, pricesPreserved: 0, errors: [] };
   const categories = await db.category.findMany();
   const categoryBySlug = new Map(categories.map((category) => [category.slug, category.id]));
 
@@ -194,7 +209,29 @@ export async function importCatalogue(rawPayload: unknown): Promise<ImportSummar
       };
 
       if (existing) {
-        await db.product.update({ where: { id: existing.id }, data });
+        // Commercial state belongs to the administrator, not to the import file.
+        // Prices, publication flags and stock counts are only replaced when the
+        // caller explicitly opts in to re-pricing.
+        const commercialFields = options.updatePrices
+          ? {}
+          : {
+              priceRwf: existing.priceRwf ?? data.priceRwf,
+              compareAtPriceRwf: existing.compareAtPriceRwf,
+              dataStatus: existing.dataStatus,
+              isPublished: existing.isPublished,
+              featured: existing.featured,
+              stock: existing.stock,
+              lowStockThreshold: existing.lowStockThreshold,
+            };
+
+        if (!options.updatePrices && existing.priceRwf !== null) {
+          summary.pricesPreserved += 1;
+        }
+
+        await db.product.update({
+          where: { id: existing.id },
+          data: { ...data, ...commercialFields },
+        });
         summary.updated += 1;
       } else {
         await db.product.create({ data: { ...data, slug: baseSlug } });

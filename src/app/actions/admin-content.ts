@@ -221,8 +221,11 @@ export async function saveSettingsAction(
     cashOnDeliveryInstructions: formString(formData, "cashOnDeliveryInstructions"),
     manualMomoEnabled: bool("manualMomoEnabled"),
     manualMtnNumber: formString(formData, "manualMtnNumber"),
-    manualAirtelNumber: formString(formData, "manualAirtelNumber"),
     manualMomoInstructions: formString(formData, "manualMomoInstructions"),
+    airtelMoneyEnabled: bool("airtelMoneyEnabled"),
+    airtelMoneyNumber: formString(formData, "airtelMoneyNumber"),
+    airtelMoneyVerified: bool("airtelMoneyVerified"),
+    airtelMoneyInstructions: formString(formData, "airtelMoneyInstructions"),
     bankTransferEnabled: bool("bankTransferEnabled"),
     bankName: formString(formData, "bankName"),
     bankAccountName: formString(formData, "bankAccountName"),
@@ -278,8 +281,13 @@ export async function saveSettingsAction(
           manualMobileMoney: {
             enabled: parsed.data.manualMomoEnabled,
             mtnNumber: parsed.data.manualMtnNumber,
-            airtelNumber: parsed.data.manualAirtelNumber,
             instructions: parsed.data.manualMomoInstructions,
+          },
+          manualAirtelMoney: {
+            enabled: parsed.data.airtelMoneyEnabled,
+            number: parsed.data.airtelMoneyNumber,
+            verified: parsed.data.airtelMoneyVerified,
+            instructions: parsed.data.airtelMoneyInstructions,
           },
           bankTransfer: {
             enabled: parsed.data.bankTransferEnabled,

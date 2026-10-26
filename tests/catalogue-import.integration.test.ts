@@ -87,6 +87,51 @@ describe("catalogue import", () => {
     expect(summary.errors[0].name).toBe("payload");
   });
 
+  it("never overwrites an administrator's approved price unless re-pricing is requested", async () => {
+    await db.product.updateMany({
+      where: { sku: importedSkus[0] },
+      data: { priceRwf: 999_999, isPublished: false, dataStatus: "APPROVED" },
+    });
+
+    const routine = await importCatalogue({
+      products: [
+        {
+          name: `Imported item ${suffix}`,
+          sku: importedSkus[0],
+          categorySlug,
+          priceRwf: 120_000,
+          isPublished: true,
+        },
+      ],
+    });
+
+    expect(routine.errors).toEqual([]);
+    expect(routine.pricesPreserved).toBe(1);
+
+    const preserved = await db.product.findFirstOrThrow({ where: { sku: importedSkus[0] } });
+    expect(preserved.priceRwf).toBe(999_999);
+    // Publication decisions are the administrator's too.
+    expect(preserved.isPublished).toBe(false);
+
+    const forced = await importCatalogue(
+      {
+        products: [
+          {
+            name: `Imported item ${suffix}`,
+            sku: importedSkus[0],
+            categorySlug,
+            priceRwf: 130_000,
+          },
+        ],
+      },
+      { updatePrices: true },
+    );
+    expect(forced.pricesPreserved).toBe(0);
+
+    const rePriced = await db.product.findFirstOrThrow({ where: { sku: importedSkus[0] } });
+    expect(rePriced.priceRwf).toBe(130_000);
+  });
+
   it("exports the catalogue in the documented JSON shape", async () => {
     const exported = await exportCatalogue();
     expect(exported.currency).toBe("RWF");

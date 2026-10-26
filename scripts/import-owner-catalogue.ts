@@ -3,7 +3,16 @@
  * applies the matching store settings (stock on request, nationwide delivery,
  * mobile money payments).
  *
- * Usage: npx tsx scripts/import-owner-catalogue.ts [--remove-demo]
+ * Usage:
+ *   npx tsx --tsconfig tsconfig.scripts.json scripts/import-owner-catalogue.ts [flags]
+ *
+ * Flags:
+ *   --apply-settings  also reset store/delivery/payment settings to the values
+ *                     below (skipped by default so an administrator's later
+ *                     settings changes are not reverted by a routine import)
+ *   --update-prices   also overwrite approved selling prices that exist already
+ *                     (skipped by default; prices belong to the administrator)
+ *   --remove-demo     delete (or archive) the seeded demonstration listings
  *
  * Idempotent: products are matched by slug and updated, never duplicated.
  */
@@ -47,7 +56,9 @@ async function main() {
   }
   console.log(`[cats] ${needed.length} categories required, ${categoryCount} created`);
 
-  // 2. Store settings for this launch: no invented stock, nationwide delivery.
+  // 2. Store settings are only re-applied on request: a catalogue refresh must
+  // not silently revert an administrator's later configuration changes.
+  if (process.argv.includes("--apply-settings")) {
   await updateSiteSettings({
     store: {
       stockMode: "ON_REQUEST",
@@ -65,15 +76,24 @@ async function main() {
       manualMobileMoney: {
         enabled: true,
         mtnNumber: "0780551125",
-        airtelNumber: "",
         instructions:
-          "Pay by MTN MoMo to 0780551125 (or call us for the Airtel Money number), then submit the transaction reference from your SMS. Our team verifies the payment before dispatch.",
+          "Send the products total by MTN MoMo to 0780551125, then submit the transaction reference from your SMS. Our team verifies the payment before dispatch.",
+      },
+      manualAirtelMoney: {
+        enabled: true,
+        number: "0727733580",
+        verified: false,
+        instructions:
+          "Send the products total by Airtel Money to 0727 733 580, then submit the transaction reference from your SMS. Our team verifies the payment before dispatch.",
       },
       bankTransfer: { enabled: false },
       mtnMomoApi: { enabled: false },
     },
   });
-  console.log("[settings] stock mode ON_REQUEST, mobile money enabled, COD disabled");
+  console.log("[settings] stock mode ON_REQUEST, MTN + Airtel manual payments enabled, COD disabled");
+  } else {
+    console.log("[settings] skipped (pass --apply-settings to re-apply store settings)");
+  }
 
   // 3. Nationwide delivery: one placeholder-free area with the fee agreed by phone.
   const areas = await db.deliveryArea.findMany();
@@ -103,9 +123,12 @@ async function main() {
   console.log("[delivery] nationwide area active");
 
   // 4. Import the approved catalogue (validated by the same service the admin UI uses).
-  const summary = await importCatalogue(payload);
+  const summary = await importCatalogue(payload, {
+    updatePrices: process.argv.includes("--update-prices"),
+  });
   console.log(
-    `[catalogue] created ${summary.created}, updated ${summary.updated}, errors ${summary.errors.length}`,
+    `[catalogue] created ${summary.created}, updated ${summary.updated}, ` +
+      `prices preserved ${summary.pricesPreserved}, errors ${summary.errors.length}`,
   );
   for (const error of summary.errors.slice(0, 10)) {
     console.log(`  ! ${error.name}: ${error.message}`);

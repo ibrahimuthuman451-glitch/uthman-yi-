@@ -23,8 +23,15 @@ export async function recordAudit(input: AuditInput): Promise<void> {
   try {
     let ip = input.ipAddress ?? null;
     if (!ip) {
-      const headerStore = await headers();
-      ip = headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
+      // headers() is only available inside a request scope. Scripts, tests and
+      // queued jobs still need an audit trail, so a missing request context is
+      // not allowed to drop the record.
+      try {
+        const headerStore = await headers();
+        ip = headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
+      } catch {
+        ip = null;
+      }
     }
     await db.auditLog.create({
       data: {

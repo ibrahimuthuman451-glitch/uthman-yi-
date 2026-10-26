@@ -8,12 +8,31 @@ must provide before a method can be offered.
 
 | Method | Status | Requirement to activate |
 | --- | --- | --- |
-| Cash on delivery | **Available** (enabled in settings) | Owner confirms the workflow and delivery areas |
-| Mobile money with manual verification (MTN / Airtel) | **Available** (enabled, MTN number seeded) | Owner confirms the merchant number and verification routine |
+| MTN MoMo (manual verification) | **Enabled** — receiving number `0780551125` | Staff verify each reference before dispatch |
+| Airtel Money (manual verification) | **Enabled** — receiving number `0727 733 580`, marked **unverified** | The business must confirm this is a valid Uthman IY receiving account |
+| Cash on delivery | Implemented but **disabled** | Re-enable in Admin → Settings if the rider workflow allows it |
 | Bank transfer | Implemented but **disabled** | Bank name, account name, account number entered in Admin → Settings |
 | MTN MoMo Collections API | Implemented but **disabled and untested** | MTN merchant account, subscription key, API user/key, public HTTPS callback URL, and a sandbox test round |
 | Airtel Money API | **Not implemented** | Airtel merchant account + API documentation |
 | Cards (Stripe/Flutterwave/etc.) | **Not implemented** | Provider account, PCI-compliant hosted checkout, commercial agreement |
+
+MTN MoMo and Airtel Money are two separate methods (`MANUAL_MOBILE_MONEY` and
+`MANUAL_AIRTEL_MONEY`), each with its own receiving number and instructions. Enabling or
+disabling one never affects the other.
+
+### Airtel Money account caveat
+
+The owner supplied `0727 733 580` as the intended Airtel Money receiving number. It is stored in
+the admin-managed settings with `verified: false`, because nobody has independently confirmed that
+the number belongs to an active Uthman IY Airtel Money account. Until an administrator ticks
+*“I have confirmed this is a valid Uthman IY receiving account”* in Admin → Settings:
+
+- the checkout instruction asks the customer to pay that number and submit the SMS reference;
+- the admin screen shows a **“Receiving account not verified”** badge;
+- no payment is ever treated as complete from the customer's say-so.
+
+This is **not** an Airtel API integration. There is no automatic Airtel confirmation, no webhook
+and no merchant-contract verification in this repository.
 
 A method appears at checkout only when it is enabled **and** its prerequisites exist. The
 gating logic lives in `src/lib/payments/options.ts` and is covered by tests.
@@ -79,3 +98,28 @@ store. Rotate the keys if they are ever exposed.
   application, and update the privacy notice.
 - Refund automation. Refunds are handled manually and should be documented per case.
 - Multi-currency pricing. All prices and orders are in RWF.
+
+## Manual verification routine (MTN MoMo and Airtel Money)
+
+1. The customer selects either **MTN MoMo (manual verification)** or **Airtel Money (manual
+   verification)** at checkout and submits the transaction reference from the SMS (at checkout or
+   later from the order page).
+2. The order stays `paymentStatus = PENDING`, `status = PENDING_PAYMENT`. Submitting a reference
+   only writes a `PAYMENT_REFERENCE_SUBMITTED` event.
+3. A staff member checks the MTN or Airtel statement for the amount, sender, reference and time,
+   then records the confirmation in Admin → Orders → *Record a verified payment*. This sets
+   `PAID`, timestamps `paidAt`, stores who confirmed it and writes an audit entry.
+4. A screenshot, a typed reference or a customer statement is **not** proof of payment on its own.
+   Only the statement check followed by the staff action marks an order paid.
+5. Orders that are already paid cannot be re-priced, so the delivery fee and total stay consistent
+   with the money received.
+
+No PINs, card numbers, one-time codes or other payment secrets are collected anywhere in this
+application. Never ask a customer for their mobile money PIN.
+
+## Delivery fee is not a payment
+
+Nationwide delivery has no published fee, so an order starts with `deliveryFeeStatus =
+PENDING_AGREEMENT` and a products-only total. When the fee is agreed by phone, staff record it in
+Admin → Orders. That updates the total and writes an order event; it does **not** mark the order
+paid, dispatched or completed. If the order is already paid, the fee cannot be changed.

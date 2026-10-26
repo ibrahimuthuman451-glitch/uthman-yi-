@@ -8,6 +8,7 @@ import {
 } from "@/lib/validation/forms";
 import { generateOrderNumber, isOrderNumberFormat } from "@/lib/orders/order-number";
 import { formatRwf, parseRwfInput } from "@/lib/money";
+import { paymentMethodSchema } from "@/lib/validation/forms";
 import { parseDeliveryAreaLines } from "@/lib/validation/settings-lines";
 
 describe("Rwandan phone normalisation", () => {
@@ -95,6 +96,17 @@ describe("contact form validation", () => {
   it("rejects unknown inquiry types and short messages", () => {
     expect(contactFormSchema.safeParse({ ...base, type: "HACK" }).success).toBe(false);
     expect(contactFormSchema.safeParse({ ...base, message: "hi" }).success).toBe(false);
+  });
+});
+
+describe("payment method validation", () => {
+  it("accepts both manual mobile money methods", () => {
+    expect(paymentMethodSchema.safeParse("MANUAL_MOBILE_MONEY").success).toBe(true);
+    expect(paymentMethodSchema.safeParse("MANUAL_AIRTEL_MONEY").success).toBe(true);
+  });
+
+  it("rejects an invented payment method", () => {
+    expect(paymentMethodSchema.safeParse("FREE_MONEY").success).toBe(false);
   });
 });
 

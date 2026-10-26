@@ -6,6 +6,9 @@ import { formatDateTime } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { buttonClasses } from "@/components/ui/button";
 import type { ProductDataStatus } from "@prisma/client";
+import { getSiteSettings } from "@/lib/settings";
+import { getPriceReviewStateFromSettings } from "@/lib/price-review";
+import { Alert } from "@/components/ui/alert";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +30,9 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
   )
     ? (params.status as ProductDataStatus)
     : "ALL";
+
+  const settings = await getSiteSettings();
+  const priceReview = getPriceReviewStateFromSettings(settings);
 
   const [result, categories] = await Promise.all([
     listAdminProducts({
@@ -77,6 +83,16 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
           </Link>
         </div>
       </div>
+
+      {priceReview.isDue ? (
+        <Alert tone={priceReview.isOverdue ? "error" : "warning"} title={priceReview.label}>
+          Supplier reference prices are reviewed every {priceReview.intervalDays} days.{" "}
+          <Link href="/admin/price-review" className="font-semibold underline">
+            Open the price review
+          </Link>{" "}
+          &mdash; approved selling prices are not changed automatically.
+        </Alert>
+      ) : null}
 
       <form method="get" className="grid gap-3 rounded-2xl border border-navy-100 bg-white p-4 sm:grid-cols-2 lg:grid-cols-5">
         {archived ? <input type="hidden" name="archived" value="1" /> : null}

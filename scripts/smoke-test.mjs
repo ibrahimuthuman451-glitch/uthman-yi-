@@ -77,6 +77,27 @@ try {
   await expectPage("/software-development/ecommerce-development", { contains: ["E-commerce"] });
   await expectPage("/cart", { contains: ["Your cart"] });
   await expectPage("/checkout", { contains: ["Checkout"] });
+
+  // Both manual mobile money methods must be offered separately.
+  const checkout = await get("/checkout");
+  record(
+    "Checkout offers MTN MoMo and Airtel Money as separate methods",
+    checkout.body.includes("MTN MoMo (manual verification)") &&
+      checkout.body.includes("Airtel Money (manual verification)") &&
+      checkout.body.includes("0727 733 580"),
+    `status ${checkout.status}`,
+  );
+  record(
+    "Checkout explains that the delivery fee is agreed by phone",
+    checkout.body.includes("Delivery is arranged across Rwanda") &&
+      checkout.body.includes("agreed with you by phone"),
+    "delivery wording",
+  );
+  record(
+    "Cash on delivery and bank transfer stay hidden",
+    !checkout.body.includes("Cash on delivery") && !checkout.body.includes("Bank transfer"),
+    "optional methods disabled",
+  );
   await expectPage("/orders/track", { contains: ["Track your order"] });
   await expectPage("/terms", { contains: ["Order terms"] });
   await expectPage("/privacy", { contains: ["Privacy notice"] });
@@ -138,6 +159,16 @@ try {
 
   await expectPage("/admin/login", { contains: ["Staff sign in"] });
 
+  for (const path of ["/admin/settings", "/admin/price-review"]) {
+    const response = await get(path);
+    record(
+      `GET ${path} requires authentication`,
+      [302, 307, 308].includes(response.status) &&
+        (response.headers.get("location") ?? "").includes("/admin/login"),
+      `status ${response.status}`,
+    );
+  }
+
   const exportUnauthenticated = await get("/api/admin/catalogue/export?format=json");
   record(
     "Catalogue export requires authentication",
@@ -158,6 +189,25 @@ try {
 
     const products = await get("/admin/products", { headers: { Cookie: cookie } });
     record("GET /admin/products with a valid session", products.status === 200, `status ${products.status}`);
+
+    const settingsPage = await get("/admin/settings", { headers: { Cookie: cookie } });
+    record(
+      "GET /admin/settings with a valid session",
+      settingsPage.status === 200 && settingsPage.body.includes("Airtel Money"),
+      `status ${settingsPage.status}`,
+    );
+
+    const reviewPage = await get("/admin/price-review", { headers: { Cookie: cookie } });
+    record(
+      "GET /admin/price-review with a valid session",
+      reviewPage.status === 200 && reviewPage.body.includes("Reference price review"),
+      `status ${reviewPage.status}`,
+    );
+
+    const airtelVerifiedWarning =
+      settingsPage.body.includes("Receiving account not verified") ||
+      settingsPage.body.includes("Receiving account confirmed");
+    record("Settings surface the Airtel verification status", airtelVerifiedWarning, "badge present");
 
     const exported = await get("/api/admin/catalogue/export?format=json", { headers: { Cookie: cookie } });
     record(

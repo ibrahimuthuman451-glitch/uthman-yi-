@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { logoutAction } from "@/app/actions/auth";
 import { AdminNav, type AdminNavItem } from "@/components/admin/admin-nav";
 import { hasOfficialLogo } from "@/components/site/logo";
+import { getSiteSettings } from "@/lib/settings";
+import { getPriceReviewStateFromSettings } from "@/lib/price-review";
 
 export const dynamic = "force-dynamic";
 
@@ -15,15 +17,18 @@ export const metadata = {
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await requireStaff();
 
-  const [newInquiries, awaitingOrders] = await Promise.all([
+  const [newInquiries, awaitingOrders, settings] = await Promise.all([
     db.inquiry.count({ where: { status: "NEW" } }),
     db.order.count({ where: { status: "PENDING_PAYMENT" } }).catch(() => 0),
+    getSiteSettings(),
   ]);
+  const priceReview = getPriceReviewStateFromSettings(settings);
 
   const items: AdminNavItem[] = [
     { href: "/admin", label: "Dashboard" },
     { href: "/admin/orders", label: "Orders", badge: awaitingOrders },
     { href: "/admin/products", label: "Products" },
+    { href: "/admin/price-review", label: "Price review", badge: priceReview.isDue ? 1 : 0 },
     { href: "/admin/categories", label: "Categories" },
     { href: "/admin/inquiries", label: "Inquiries", badge: newInquiries },
     { href: "/admin/software", label: "Software products" },

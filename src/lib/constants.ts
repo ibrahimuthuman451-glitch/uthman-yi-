@@ -44,6 +44,12 @@ export const orderStatusLabels: Record<OrderStatus, string> = {
   CANCELLED: "Cancelled",
 };
 
+export const deliveryFeeStatusLabels: Record<string, string> = {
+  PENDING_AGREEMENT: "Delivery fee pending agreement",
+  AGREED: "Delivery fee agreed",
+  WAIVED: "Delivery waived",
+};
+
 export const paymentStatusLabels: Record<PaymentStatus, string> = {
   UNPAID: "Unpaid",
   PENDING: "Payment pending verification",
@@ -54,7 +60,8 @@ export const paymentStatusLabels: Record<PaymentStatus, string> = {
 
 export const paymentMethodLabels: Record<PaymentMethod, string> = {
   CASH_ON_DELIVERY: "Cash on delivery",
-  MANUAL_MOBILE_MONEY: "Mobile money (manual verification)",
+  MANUAL_MOBILE_MONEY: "MTN MoMo (manual verification)",
+  MANUAL_AIRTEL_MONEY: "Airtel Money (manual verification)",
   BANK_TRANSFER: "Bank transfer",
   MTN_MOMO_API: "MTN MoMo (online)",
 };
