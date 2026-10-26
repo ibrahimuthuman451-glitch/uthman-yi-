@@ -62,12 +62,12 @@ export function Logo({
     // The supplied artwork has a solid white background, so it is placed on a
     // white lockup rather than tinted or cut out: the original file is untouched.
     return (
-      <span className={cn("inline-flex items-center rounded-xl bg-white px-2.5 py-1.5", className)}>
+      <span className={cn("inline-flex items-center rounded-lg bg-white px-2 py-1", className)}>
         {/* eslint-disable-next-line @next/next/no-img-element -- original file, natural aspect ratio preserved */}
         <img
           src={`/brand/${file}`}
           alt="Uthman IY"
-          className="h-8 w-auto object-contain sm:h-9"
+          className="h-7 w-auto object-contain sm:h-8"
           decoding="async"
         />
       </span>
@@ -79,7 +79,7 @@ export function Logo({
     <img
       src={`/brand/${file}`}
       alt="Uthman IY"
-      className={cn("w-auto object-contain", "h-9 sm:h-10", className)}
+      className={cn("w-auto object-contain", "h-7 sm:h-8", className)}
       decoding="async"
     />
   );

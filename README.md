@@ -216,7 +216,7 @@ Details and remaining hardening recommendations: `docs/SECURITY.md`.
 
 The owner's original **blue UY logo** is integrated unchanged at `public/brand/uthman-iy-logo.png`
 (1619 × 971 PNG, SHA-256 `f5d4456e…3db95f`). The header and footer render that exact file with CSS
-height only, so its aspect ratio and colours are preserved; nothing is redrawn, cropped or tinted.
+height only (28–32 px, deliberately small), so its aspect ratio and colours are preserved; nothing is redrawn, cropped or tinted.
 Because the artwork has a solid white background, the footer places it on a white rounded lockup.
 See `public/brand/README.md` for the verification details.
 
