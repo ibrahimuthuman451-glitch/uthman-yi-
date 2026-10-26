@@ -146,6 +146,31 @@ describe("priceOrder", () => {
     }
   });
 
+  it("allows ordering without a stock figure when stock is confirmed by phone", () => {
+    const result = priceOrder({
+      ...base,
+      stockMode: "ON_REQUEST",
+      items: [{ productId: "p1", quantity: 4 }],
+      products: products(product({ stock: 0 })),
+    });
+    expect(result.subtotalRwf).toBe(400_000);
+    expect(result.totalRwf).toBe(402_000);
+  });
+
+  it("still rejects unpriced reference listings in on-request mode", () => {
+    try {
+      priceOrder({
+        ...base,
+        stockMode: "ON_REQUEST",
+        items: [{ productId: "p1", quantity: 1 }],
+        products: products(product({ dataStatus: "REFERENCE", priceRwf: null })),
+      });
+      throw new Error("expected failure");
+    } catch (error) {
+      expect((error as PricingError).code).toBe("NOT_PURCHASABLE");
+    }
+  });
+
   it("waives delivery once the free-delivery threshold is reached", () => {
     const free = priceOrder({
       ...base,

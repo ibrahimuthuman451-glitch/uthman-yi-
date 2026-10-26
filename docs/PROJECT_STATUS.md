@@ -55,6 +55,7 @@ Environment: Node.js 24.22, npm 11.19, Next.js 15.5.28, Prisma 6.19.3, PostgreSQ
 | `npx next lint` | Passes with no warnings or errors |
 | `npm run build:ci` | Production build succeeds; 37 routes compiled |
 | `npm test` | 50 tests pass (7 files: pricing, availability, validation, payments, orders, inquiries and catalogue import) |
+| `npx tsx --tsconfig tsconfig.scripts.json scripts/import-owner-catalogue.ts --remove-demo` | Imported 60 approved listings (0 errors), removed 6 demo listings, activated nationwide delivery, set stock-on-request and mobile-money settings |
 | `npm run smoke` | 34/34 HTTP checks pass against `next start` |
 | `node scripts/check-links.mjs` | Crawled 46 pages; no broken internal links or images |
 
@@ -93,11 +94,12 @@ Environment: Node.js 24.22, npm 11.19, Next.js 15.5.28, Prisma 6.19.3, PostgreSQ
 | Item | State | Blocker |
 | --- | --- | --- |
 | Official logo | **Integrated 2026-10-26** - original PNG used unchanged in header, footer lockup, OG image and icon | Resolved |
-| Real product catalogue | Only labelled demo listings exist | Owner must supply prices, descriptions, photography and stock |
-| Real delivery fees | One placeholder area with a 0 RWF fee | Owner decision on areas and fees |
+| Real product catalogue | **Imported 2026-10-26**: 60 approved, published listings with current RWF prices (names/prices adopted from the reference shop at owner instruction) | Product photos and verified specifications still needed; prices to be re-checked by the owner |
+| Delivery | Nationwide delivery area active; fee agreed by phone before dispatch (not charged online) | Add fixed-fee areas in Admin if a published price list is wanted |
 | Customer accounts / order history | Not implemented | Guest checkout + tracking-by-order-number is implemented instead |
 | Product image uploads | Disabled (URL/path only) | No storage provider and no upload validation implemented |
-| Card / Airtel Money payments | Not implemented | No provider accounts/contracts |
+| Card payments | Not implemented | No provider account/contract |
+| Mobile money (manual) | **Enabled**: MTN MoMo number configured; customer submits reference, staff verify | Airtel Money number not yet supplied |
 | MTN MoMo API | Written but disabled and untested | Merchant credentials + sandbox round |
 | Email notifications | Not implemented | No mail provider |
 | Refunds | Manual only | Business process decision |
@@ -112,10 +114,11 @@ Environment: Node.js 24.22, npm 11.19, Next.js 15.5.28, Prisma 6.19.3, PostgreSQ
 4. **Strong admin password** (the seed refuses the example value in production).
 5. **Domain name** (optional but expected for launch) and HTTPS.
 6. **SMTP/API credentials** if automatic form notifications are wanted. The public contact email is configured.
-7. **MTN MoMo** (and optionally Airtel) merchant accounts, subscription key, API user/key, public
-   callback URL, and a successful sandbox test before production.
-8. **Payment/bank details** if bank transfer is to be offered.
-9. Optional: image storage/CDN for product photography.
+7. **Airtel Money merchant number** to display at checkout (MTN MoMo 0780551125 is configured).
+8. **MTN MoMo Collections API** credentials (subscription key, API user/key, public callback URL) and a
+   successful sandbox round if automatic payment confirmation is wanted instead of manual verification.
+9. **Payment/bank details** if bank transfer is to be offered.
+10. Optional: image storage/CDN for product photography, plus the photographs themselves.
 
 ## 8. Run it locally on Windows
 
@@ -161,9 +164,9 @@ node scripts/check-links.mjs
 1. Push the branch, create the hosting project (Vercel free tier is the quickest), add env vars.
 2. Create the production PostgreSQL database and run `npm run db:deploy` then `npm run db:seed:prod`.
 3. Point `NEXT_PUBLIC_SITE_URL` at the real domain and redeploy.
-4. Sign in, change the admin password, upload the logo, confirm delivery areas and payment settings.
-5. Replace demo listings with approved products (individually or via JSON import).
-6. Place a test order, cancel it, confirm stock returns; then hide demo products.
+4. Sign in, change the admin password, verify the logo, contact details, delivery area and payment settings.
+5. Review the 60 imported listings: confirm the prices, add Uthman IY photography and verified specifications, and hide anything you do not sell.
+6. Place a test order and cancel it. Stock-on-request mode is active, so no stock is reserved; verify the status flow and the manual payment confirmation instead.
 7. Configure backups, uptime monitoring and (optionally) email delivery.
 8. Only after a sandbox test: enable MTN MoMo in production.
 
@@ -172,10 +175,10 @@ Detailed steps: `docs/DEPLOYMENT.md` and `docs/PAYMENTS.md`.
 ## 10. Decisions and content that need the owner's approval
 
 1. ~~Logo file~~ - received 2026-10-26; confirm it is the final artwork (a vector version would scale better in print).
-2. **Product pricing policy** — which reference-research items to stock, and Uthman IY's own prices.
-3. **Product copy and photography** — must be owned/licensed; nothing was copied from another company.
-4. **Delivery areas and fees** (the seeded 0 RWF area is explicitly marked as pending).
-5. **Payment methods to enable** and whether manual mobile-money verification is acceptable at launch.
+2. **Adopted prices** - the 60 listings use prices captured from the reference shop on 2026-10-26 at your instruction. Confirm they are your selling prices, and set a routine to update them when supplier prices change.
+3. **Product photography and specifications** - none were supplied or copied; listings show a labelled placeholder and a "specifications pending" note until you provide them.
+4. **Delivery fee model** - nationwide delivery is offered with the fee agreed by phone. Decide whether to publish fixed fees per district instead (Admin -> Settings -> Delivery areas).
+5. **Payments** - confirm manual MTN MoMo verification is acceptable at launch, supply the Airtel Money merchant number, and decide whether to onboard the MTN MoMo API.
 6. **Opening hours**, street address and any registration/tax details to publish (phone numbers and email were confirmed on 2026-10-26).
 7. **Order terms and privacy notice** — written to match the implementation; legal review recommended.
 8. **Software product claims** — current statuses (MatchVision AI: in development; Digital Discipline:

@@ -84,20 +84,20 @@ async function seedDeliveryAreas() {
     return;
   }
 
-  // Fees are a commercial decision that only the owner can confirm. A single
-  // placeholder area keeps checkout testable and is flagged in the admin
-  // dashboard and documentation as requiring owner approval.
+  // Uthman IY delivers across Rwanda. The fee depends on the destination and is
+  // agreed by phone before dispatch, so no invented fee is stored here; the
+  // owner can add fixed-fee areas in Admin -> Settings at any time.
   await db.deliveryArea.create({
     data: {
-      name: "Kigali (fee pending confirmation)",
+      name: "Rwanda - nationwide (fee confirmed by phone)",
       feeRwf: 0,
       isActive: true,
-      sortOrder: 1,
+      sortOrder: 0,
       notes:
-        "Placeholder delivery option seeded for development. Uthman IY must confirm the delivery fee and coverage before launch.",
+        "Delivery across Rwanda. The fee depends on the district and is agreed by phone before dispatch; it is not charged online.",
     },
   });
-  log("Created placeholder delivery area (fee requires owner confirmation).");
+  log("Created the nationwide delivery area (fee agreed by phone).");
 }
 
 async function seedCategories() {
@@ -154,9 +154,9 @@ async function seedReferenceCatalogue() {
 }
 
 async function seedDemoProducts() {
-  const allowDemo = productionRun
-    ? process.env.SEED_DEMO_PRODUCTS === "true"
-    : process.env.SEED_DEMO_PRODUCTS !== "false";
+  // Demonstration listings are opt-in in every environment: the shop should
+  // only show owner-approved products once they exist.
+  const allowDemo = process.env.SEED_DEMO_PRODUCTS === "true";
 
   if (!allowDemo) {
     log("Demo products disabled - no demonstration listings seeded.");

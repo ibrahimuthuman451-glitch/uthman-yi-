@@ -72,10 +72,13 @@ export type PriceOrderInput = {
   deliveryFeeRwf: number;
   maxQuantityPerItem: number;
   freeDeliveryThreshold?: number | null;
+  /** ON_REQUEST skips the stock ceiling; availability is confirmed by phone. */
+  stockMode?: "TRACKED" | "ON_REQUEST";
 };
 
 export function priceOrder(input: PriceOrderInput): OrderPricing {
   const { items, products, maxQuantityPerItem } = input;
+  const stockMode = input.stockMode ?? "TRACKED";
 
   if (!Array.isArray(items) || items.length === 0) {
     throw new PricingError("EMPTY_CART", "Your cart is empty.");
@@ -123,14 +126,17 @@ export function priceOrder(input: PriceOrderInput): OrderPricing {
       );
     }
 
-    const availability = getProductAvailability({
-      dataStatus: product.dataStatus,
-      isPublished: product.isPublished,
-      archivedAt: product.archivedAt,
-      priceRwf: product.priceRwf,
-      stock: product.stock,
-      lowStockThreshold: product.lowStockThreshold,
-    });
+    const availability = getProductAvailability(
+      {
+        dataStatus: product.dataStatus,
+        isPublished: product.isPublished,
+        archivedAt: product.archivedAt,
+        priceRwf: product.priceRwf,
+        stock: product.stock,
+        lowStockThreshold: product.lowStockThreshold,
+      },
+      stockMode,
+    );
 
     if (!availability.purchasable) {
       throw new PricingError(
@@ -150,7 +156,7 @@ export function priceOrder(input: PriceOrderInput): OrderPricing {
       );
     }
 
-    if (product.stock < item.quantity) {
+    if (stockMode === "TRACKED" && product.stock < item.quantity) {
       throw new PricingError(
         "INSUFFICIENT_STOCK",
         `Only ${product.stock} unit(s) of ${product.name} are available.`,

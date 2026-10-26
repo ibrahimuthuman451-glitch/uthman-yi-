@@ -6,19 +6,18 @@
  * order totals and admin screens always agree.
  */
 
-const rwfFormatter = new Intl.NumberFormat("en-RW", {
-  style: "currency",
-  currency: "RWF",
-  maximumFractionDigits: 0,
-  minimumFractionDigits: 0,
-});
-
-/** Formats an integer amount in RWF, e.g. 650000 -> "RWF 650,000". */
+/**
+ * Formats an integer amount in RWF, e.g. 650000 -> "RWF 650,000".
+ *
+ * The currency label is written explicitly instead of relying on ICU: the
+ * en-RW locale renders the franc as "RF", which is ambiguous for customers and
+ * in exported invoices. "RWF" is used consistently across the site.
+ */
 export function formatRwf(amount: number | null | undefined): string {
   if (amount === null || amount === undefined || Number.isNaN(amount)) {
     return "Price on request";
   }
-  return rwfFormatter.format(Math.round(amount)).replace(/\u00a0/g, " ");
+  return `RWF ${formatRwfAmount(amount)}`;
 }
 
 /** Plain grouped number without currency prefix, e.g. "650,000". */

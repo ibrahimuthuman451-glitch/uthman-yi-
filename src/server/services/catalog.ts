@@ -46,15 +46,21 @@ export const productCardSelect = {
 
 type ProductCardRow = Prisma.ProductGetPayload<{ select: typeof productCardSelect }>;
 
-export function toPublicProductCard(product: ProductCardRow): PublicProductCard | null {
-  const availability = getProductAvailability({
-    dataStatus: product.dataStatus,
-    isPublished: product.isPublished,
-    archivedAt: product.archivedAt,
-    priceRwf: product.priceRwf,
-    stock: product.stock,
-    lowStockThreshold: product.lowStockThreshold,
-  });
+export function toPublicProductCard(
+  product: ProductCardRow,
+  stockMode: "TRACKED" | "ON_REQUEST" = "TRACKED",
+): PublicProductCard | null {
+  const availability = getProductAvailability(
+    {
+      dataStatus: product.dataStatus,
+      isPublished: product.isPublished,
+      archivedAt: product.archivedAt,
+      priceRwf: product.priceRwf,
+      stock: product.stock,
+      lowStockThreshold: product.lowStockThreshold,
+    },
+    stockMode,
+  );
 
   return {
     id: product.id,
@@ -111,6 +117,7 @@ export type CatalogueResult = {
 export async function listCatalogueProducts(query: CatalogueQuery): Promise<CatalogueResult> {
   const pageSize = query.pageSize ?? 9;
   const page = Math.max(1, query.page ?? 1);
+  const settings = await getSiteSettings();
   const baseWhere = await publicProductWhere();
 
   const search = query.search?.trim().slice(0, 80) ?? "";
@@ -156,7 +163,7 @@ export async function listCatalogueProducts(query: CatalogueQuery): Promise<Cata
 
   return {
     products: rows
-      .map(toPublicProductCard)
+      .map((row) => toPublicProductCard(row, settings.store.stockMode))
       .filter((product): product is PublicProductCard => product !== null),
     total,
     page,
@@ -193,6 +200,7 @@ export async function getPublicProductBySlug(
   slug: string,
 ): Promise<PublicProductDetail | null> {
   const safeSlug = z.string().trim().max(120).parse(slug);
+  const settings = await getSiteSettings();
   const where = await publicProductWhere();
   const product = await db.product.findFirst({
     where: { ...where, slug: safeSlug },
@@ -208,7 +216,7 @@ export async function getPublicProductBySlug(
   });
   if (!product) return null;
 
-  const card = toPublicProductCard(product);
+  const card = toPublicProductCard(product, settings.store.stockMode);
   if (!card) return null;
 
   const specs = Array.isArray(product.specifications)
@@ -264,6 +272,7 @@ export async function listRelatedProducts(
   take = 3,
 ): Promise<PublicProductCard[]> {
   if (!categoryId) return [];
+  const settings = await getSiteSettings();
   const where = await publicProductWhere();
   const rows = await db.product.findMany({
     where: { ...where, categoryId, id: { not: excludeId } },
@@ -272,11 +281,12 @@ export async function listRelatedProducts(
     orderBy: { featured: "desc" },
   });
   return rows
-    .map(toPublicProductCard)
+    .map((row) => toPublicProductCard(row, settings.store.stockMode))
     .filter((product): product is PublicProductCard => product !== null);
 }
 
 export async function listFeaturedProducts(take = 4): Promise<PublicProductCard[]> {
+  const settings = await getSiteSettings();
   const where = await publicProductWhere();
   const rows = await db.product.findMany({
     where: { ...where, priceRwf: { not: null }, stock: { gt: 0 } },
@@ -285,6 +295,6 @@ export async function listFeaturedProducts(take = 4): Promise<PublicProductCard[
     take,
   });
   return rows
-    .map(toPublicProductCard)
+    .map((row) => toPublicProductCard(row, settings.store.stockMode))
     .filter((product): product is PublicProductCard => product !== null);
 }

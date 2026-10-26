@@ -128,6 +128,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
       deliveryFeeRwf: deliveryArea.feeRwf,
       maxQuantityPerItem: settings.store.maxQuantityPerItem,
       freeDeliveryThreshold: settings.store.freeDeliveryThreshold,
+      stockMode: settings.store.stockMode,
     });
   } catch (error) {
     if (error instanceof PricingError) {
@@ -180,26 +181,35 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
         include: { items: true },
       });
 
-      // Atomic stock reservation: the conditional update guarantees that two
-      // concurrent orders cannot oversell the same unit.
+      // Stock reservation.
+      // TRACKED: the conditional update guarantees two concurrent orders cannot
+      // oversell the same unit. ON_REQUEST: no inventory figure is trusted, so
+      // stock is only decremented when it is known to cover the order; the
+      // order itself is confirmed by phone before dispatch.
       for (const line of pricing.lines) {
         const updated = await tx.product.updateMany({
           where: { id: line.productId, stock: { gte: line.quantity } },
           data: { stock: { decrement: line.quantity } },
         });
         if (updated.count === 0) {
-          throw new PricingError(
-            "INSUFFICIENT_STOCK",
-            `Stock for ${line.productName} changed while you were checking out. Please review your cart.`,
-            line.productName,
-          );
+          if (settings.store.stockMode === "TRACKED") {
+            throw new PricingError(
+              "INSUFFICIENT_STOCK",
+              `Stock for ${line.productName} changed while you were checking out. Please review your cart.`,
+              line.productName,
+            );
+          }
+          continue;
         }
         await tx.stockMovement.create({
           data: {
             productId: line.productId,
             delta: -line.quantity,
             reason: "ORDER_PLACED",
-            note: `Reserved for order ${orderNumber}`,
+            note:
+              settings.store.stockMode === "TRACKED"
+                ? `Reserved for order ${orderNumber}`
+                : `Stock decremented for order ${orderNumber} (availability also confirmed by phone)`,
             orderId: created.id,
           },
         });

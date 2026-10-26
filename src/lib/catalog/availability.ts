@@ -33,8 +33,11 @@ export type ProductAvailability = {
  * Used by the shop UI, the cart validator and the order service so the three
  * layers cannot disagree.
  */
+export type StockMode = "TRACKED" | "ON_REQUEST";
+
 export function getProductAvailability(
   product: ProductAvailabilityInput,
+  stockMode: StockMode = "TRACKED",
 ): ProductAvailability {
   const isDemo = product.dataStatus === "DEMO";
 
@@ -74,6 +77,18 @@ export function getProductAvailability(
       label: "Price on request",
       tone: "warning",
       reason: "NO_PRICE",
+      isDemo,
+    };
+  }
+
+  // With stock on request the shop does not pretend to know the quantity: the
+  // order is accepted and availability is confirmed by phone before dispatch.
+  if (stockMode === "ON_REQUEST") {
+    return {
+      purchasable: true,
+      label: "Available to order",
+      tone: "warning",
+      reason: "OK",
       isDemo,
     };
   }

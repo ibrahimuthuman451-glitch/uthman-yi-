@@ -75,6 +75,12 @@ describe("payment capability gating", () => {
     expect(option?.enabled).toBe(false);
   });
 
+  it("reflects the owner's launch decision: mobile money on, cash on delivery off", () => {
+    const options = buildPaymentOptions(defaultSettings, envWithoutMomo);
+    expect(options.find((option) => option.method === "MANUAL_MOBILE_MONEY")?.enabled).toBe(true);
+    expect(options.find((option) => option.method === "CASH_ON_DELIVERY")?.enabled).toBe(false);
+  });
+
   it("treats prepaid methods differently from cash on delivery", () => {
     expect(isPrepaidMethod("CASH_ON_DELIVERY")).toBe(false);
     expect(isPrepaidMethod("MANUAL_MOBILE_MONEY")).toBe(true);

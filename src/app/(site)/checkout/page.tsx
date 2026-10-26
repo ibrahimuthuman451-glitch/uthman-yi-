@@ -75,6 +75,7 @@ export default async function CheckoutPage() {
                 mtn: settings.payments.manualMobileMoney.mtnNumber,
                 airtel: settings.payments.manualMobileMoney.airtelNumber,
               }}
+              deliveryNotice={settings.store.deliveryNotice}
             />
           )}
         </div>

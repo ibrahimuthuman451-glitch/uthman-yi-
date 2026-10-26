@@ -37,6 +37,20 @@ describe("getProductAvailability", () => {
     expect(result.purchasable).toBe(true);
   });
 
+  it("offers products with no stock figure when stock is confirmed by phone", () => {
+    const result = getProductAvailability({ ...base, stock: 0 }, "ON_REQUEST");
+    expect(result.purchasable).toBe(true);
+    expect(result.label).toBe("Available to order");
+    expect(result.reason).toBe("OK");
+  });
+
+  it("still refuses reference listings and missing prices in on-request mode", () => {
+    expect(
+      getProductAvailability({ ...base, dataStatus: "REFERENCE", priceRwf: null }, "ON_REQUEST").reason,
+    ).toBe("REFERENCE");
+    expect(getProductAvailability({ ...base, priceRwf: null }, "ON_REQUEST").reason).toBe("NO_PRICE");
+  });
+
   it("blocks unpublished, archived, unpriced and out-of-stock listings", () => {
     expect(getProductAvailability({ ...base, isPublished: false }).reason).toBe("UNPUBLISHED");
     expect(getProductAvailability({ ...base, archivedAt: new Date() }).reason).toBe("ARCHIVED");

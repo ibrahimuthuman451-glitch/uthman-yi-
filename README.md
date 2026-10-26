@@ -151,6 +151,7 @@ scripts/                    dev database, smoke test, link checker
 | `npm run db:seed` | Seed (development: demo listings allowed) |
 | `npm run db:seed:prod` | Seed for production: refuses demo listings and the example admin password |
 | `npm run db:studio` | Prisma Studio |
+| `npm run catalogue:apply` | Re-apply the owner-approved catalogue + launch settings (idempotent; `-- --remove-demo` also removes demo listings) |
 
 ### Database options
 
@@ -224,6 +225,8 @@ See `public/brand/README.md` for the verification details.
 
 ## Catalogue data policy
 
+**Current catalogue:** 60 owner-approved listings (HIKVISION, IMOU and Starlink equipment) published in RWF. At the owner's instruction, product names and prices were adopted from the reference shop on 26 October 2026 (`data/import/uthman-iy-catalogue-2026-10-26.json` records the source and retrieval date). Product photography, marketing copy and stock figures were **not** copied: listings show a labelled placeholder until Uthman IY supplies its own images, and **stock is not tracked** - availability is confirmed by phone before dispatch (`stockMode: ON_REQUEST`).
+
 - Only **approved** listings with an Uthman IY price are sold. Reference research rows cannot be ordered.
 - Seeded **demo** listings are labelled "Demo listing" on every surface and are excluded in production seed runs.
 - Third-party catalogue research (`data/reference/fabritech-catalogue-2026-10-25.json`) records only
@@ -237,8 +240,8 @@ See `public/brand/README.md` for the verification details.
 
 See `docs/PROJECT_STATUS.md` for the complete list. The blocking items before a real launch are:
 
-1. Approved product data (prices, descriptions, photography, stock) — currently only labelled demo listings exist.
-2. Confirmed delivery areas and fees (the seeded area has a zero fee marked "pending confirmation").
+1. Re-check the adopted prices before launch and update them when supplier prices change; supply product photography and any verified specifications (listings currently show placeholders and "specifications pending").
+2. Delivery fee amount(s): the shop currently offers nationwide delivery with the fee agreed by phone. Add fixed-fee areas in Admin -> Settings if a published price list is preferred.
 3. SMTP/email delivery for automatic form notifications (the published address is set; no mail transport is configured yet).
-4. A decision on payment providers and their commercial accounts (MTN MoMo, Airtel Money, bank, cards).
+4. The Airtel Money merchant number (MTN MoMo 0780551125 is configured) and, if automatic payment confirmation is wanted, MTN MoMo Collections API credentials.
 5. Optional image storage for product photography.

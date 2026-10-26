@@ -38,12 +38,14 @@ export function CheckoutForm({
   maxQuantityPerItem,
   bankDetails,
   mobileMoneyNumbers,
+  deliveryNotice,
 }: {
   areas: DeliveryArea[];
   paymentOptions: PaymentOption[];
   maxQuantityPerItem: number;
   bankDetails: { bankName: string; accountName: string; accountNumber: string } | null;
   mobileMoneyNumbers: { mtn: string; airtel: string };
+  deliveryNotice: string;
 }) {
   const { items, ready, clearCart } = useCart();
   const [state, formAction, pending] = useActionState(placeOrderAction, initialActionState);
@@ -112,6 +114,7 @@ export function CheckoutForm({
     0,
   );
   const deliveryFee = selectedArea?.feeRwf ?? 0;
+  const deliveryFeePending = deliveryFee === 0;
   const total = subtotal + deliveryFee;
   const hasDemo = lines.some((line) => line.server?.isDemo);
 
@@ -311,15 +314,21 @@ export function CheckoutForm({
             <dt className="text-muted">Subtotal</dt>
             <dd className="font-medium text-navy-900">{formatRwf(subtotal)}</dd>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-between gap-3">
             <dt className="text-muted">Delivery{selectedArea ? ` (${selectedArea.name})` : ""}</dt>
-            <dd className="font-medium text-navy-900">{formatRwf(deliveryFee)}</dd>
+            <dd className="text-right font-medium text-navy-900">
+              {deliveryFeePending ? "Confirmed by phone" : formatRwf(deliveryFee)}
+            </dd>
           </div>
           <div className="flex justify-between border-t border-navy-100 pt-3 text-base font-semibold text-navy-900">
-            <dt>Total</dt>
+            <dt>{deliveryFeePending ? "Products total" : "Total"}</dt>
             <dd>{formatRwf(total)}</dd>
           </div>
         </dl>
+
+        {deliveryNotice ? (
+          <p className="mt-3 rounded-lg bg-surface p-3 text-xs leading-5 text-navy-700">{deliveryNotice}</p>
+        ) : null}
 
         <div className="mt-4">
           <Checkbox

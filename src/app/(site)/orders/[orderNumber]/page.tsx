@@ -138,12 +138,14 @@ export default async function OrderPage({
                   <dt className="text-muted">Subtotal</dt>
                   <dd className="text-navy-900">{formatRwf(order.subtotalRwf)}</dd>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between gap-3">
                   <dt className="text-muted">Delivery ({order.deliveryAreaName})</dt>
-                  <dd className="text-navy-900">{formatRwf(order.deliveryFeeRwf)}</dd>
+                  <dd className="text-right text-navy-900">
+                    {order.deliveryFeeRwf === 0 ? "Confirmed by phone" : formatRwf(order.deliveryFeeRwf)}
+                  </dd>
                 </div>
                 <div className="flex justify-between border-t border-navy-100 pt-2 text-base font-bold text-navy-900">
-                  <dt>Total</dt>
+                  <dt>{order.deliveryFeeRwf === 0 ? "Products total" : "Total"}</dt>
                   <dd>{formatRwf(order.totalRwf)}</dd>
                 </div>
               </dl>

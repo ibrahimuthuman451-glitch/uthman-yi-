@@ -63,7 +63,9 @@ export default async function ProductDetailPage({ params }: { params: Params }) 
             url: `${getSiteUrl()}/shop/${product.slug}`,
             priceCurrency: "RWF",
             price: product.priceRwf,
-            availability: product.stock > 0
+            // Stock-on-request listings are orderable even without a stock
+            // figure, so schema availability follows purchasability.
+            availability: product.purchasable
               ? "https://schema.org/InStock"
               : "https://schema.org/OutOfStock",
             seller: { "@type": "Organization", name: "Uthman IY" },

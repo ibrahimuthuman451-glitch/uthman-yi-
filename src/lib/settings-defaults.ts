@@ -21,9 +21,16 @@ export type SiteSettings = {
   };
   store: {
     currency: "RWF";
+    /**
+     * TRACKED enforces the stock column (orders are refused when stock is short).
+     * ON_REQUEST lets customers order with stock confirmed by phone before
+     * dispatch - used when no reliable inventory figure exists yet.
+     */
+    stockMode: "TRACKED" | "ON_REQUEST";
     showDemoProducts: boolean;
     catalogueNotice: string;
     orderNotice: string;
+    deliveryNotice: string;
     freeDeliveryThreshold: number | null;
     maxQuantityPerItem: number;
   };
@@ -70,19 +77,26 @@ export const defaultSettings: SiteSettings = {
   },
   store: {
     currency: "RWF",
+    // No verified inventory figures exist yet, so availability is confirmed by
+    // phone before dispatch. Switch to TRACKED once real stock is maintained.
+    stockMode: "ON_REQUEST",
     // Demo listings are seeded only in non-production environments and are
     // always labelled. This flag lets the owner hide them entirely.
     showDemoProducts: !isProduction(),
     catalogueNotice:
-      "Prices are confirmed in Rwandan francs (RWF). Delivery options and fees are shown at checkout.",
+      "All prices are in Rwandan francs (RWF) and were last reviewed on 26 October 2026. Delivery is available across Rwanda; the delivery fee is confirmed by phone before dispatch.",
     orderNotice:
-      "Orders are prepared after confirmation. Payment instructions are shown on the order page.",
+      "Your order is confirmed by phone before dispatch. Payment instructions are shown on your order page.",
+    deliveryNotice:
+      "Delivery is arranged across Rwanda. The delivery fee depends on your location and is agreed with you by phone before dispatch; it is not charged online.",
     freeDeliveryThreshold: null,
     maxQuantityPerItem: 20,
   },
   payments: {
     cashOnDelivery: {
-      enabled: true,
+      // Owner confirmed mobile money as the payment route; cash on delivery is
+      // available to re-enable in Admin -> Settings if the rider workflow allows it.
+      enabled: false,
       instructions:
         "Pay the rider in cash when your order is delivered. Orders are confirmed by phone before dispatch.",
     },

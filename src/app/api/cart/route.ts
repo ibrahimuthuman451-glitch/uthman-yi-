@@ -47,14 +47,17 @@ export async function POST(request: Request) {
   const products = await getProductsByIds(parsed.data.ids);
 
   const items = products.map((product) => {
-    const availability = getProductAvailability({
-      dataStatus: product.dataStatus,
-      isPublished: product.isPublished,
-      archivedAt: product.archivedAt,
-      priceRwf: product.priceRwf,
-      stock: product.stock,
-      lowStockThreshold: product.lowStockThreshold,
-    });
+    const availability = getProductAvailability(
+      {
+        dataStatus: product.dataStatus,
+        isPublished: product.isPublished,
+        archivedAt: product.archivedAt,
+        priceRwf: product.priceRwf,
+        stock: product.stock,
+        lowStockThreshold: product.lowStockThreshold,
+      },
+      settings.store.stockMode,
+    );
 
     return {
       productId: product.id,
@@ -73,6 +76,8 @@ export async function POST(request: Request) {
   return NextResponse.json({
     items,
     maxQuantityPerItem: settings.store.maxQuantityPerItem,
+    stockMode: settings.store.stockMode,
+    deliveryNotice: settings.store.deliveryNotice,
     freeDeliveryThreshold: settings.store.freeDeliveryThreshold,
     orderNotice: settings.store.orderNotice,
   });

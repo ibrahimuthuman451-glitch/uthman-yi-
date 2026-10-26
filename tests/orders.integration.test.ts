@@ -28,7 +28,39 @@ async function resetStock(units = 10) {
   await db.product.update({ where: { id: productId }, data: { stock: units } });
 }
 
+let originalSettings: unknown = null;
+
+async function setSiteSettings(patch: { stockMode?: "TRACKED" | "ON_REQUEST"; cashOnDelivery?: boolean }) {
+  const row = await db.siteSetting.findUniqueOrThrow({ where: { key: "site" } });
+  const value = row.value as Record<string, unknown>;
+  const store = (value.store ?? {}) as Record<string, unknown>;
+  const payments = (value.payments ?? {}) as Record<string, unknown>;
+  const cod = (payments.cashOnDelivery ?? {}) as Record<string, unknown>;
+  await db.siteSetting.update({
+    where: { key: "site" },
+    data: {
+      value: {
+        ...value,
+        store: { ...store, ...(patch.stockMode ? { stockMode: patch.stockMode } : {}) },
+        payments: {
+          ...payments,
+          cashOnDelivery: {
+            ...cod,
+            ...(patch.cashOnDelivery === undefined ? {} : { enabled: patch.cashOnDelivery }),
+          },
+        },
+      } as never,
+    },
+  });
+}
+
 beforeAll(async () => {
+  // These tests exercise the TRACKED stock rules and cash-on-delivery orders,
+  // so they pin those settings and restore the owner's configuration afterwards.
+  const row = await db.siteSetting.findUnique({ where: { key: "site" } });
+  originalSettings = row?.value ?? null;
+  await setSiteSettings({ stockMode: "TRACKED", cashOnDelivery: true });
+
   const category = await db.category.create({
     data: { name: `Test category ${suffix}`, slug: `test-category-${suffix}` },
   });
@@ -87,6 +119,12 @@ afterAll(async () => {
   await db.deliveryArea.deleteMany({ where: { id: deliveryAreaId } });
   await db.category.deleteMany({ where: { id: categoryId } });
   await db.user.deleteMany({ where: { id: actor.id } });
+  if (originalSettings) {
+    await db.siteSetting.update({
+      where: { key: "site" },
+      data: { value: originalSettings as never },
+    });
+  }
   await db.$disconnect();
 });
 
@@ -168,6 +206,40 @@ describe("order creation", () => {
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.code).toBe("INVALID_DELIVERY_AREA");
+  });
+});
+
+describe("stock on request", () => {
+  it("accepts an order with no stock figure and leaves inventory untouched", async () => {
+    await setSiteSettings({ stockMode: "ON_REQUEST", cashOnDelivery: true });
+    await resetStock(0);
+
+    const created = await createOrder(
+      baseInput({ items: [{ productId, quantity: 3 }], idempotencyKey: `onrequest-${suffix}` }),
+    );
+    expect(created.ok).toBe(true);
+    if (!created.ok) return;
+    createdOrderIds.push(created.order.id);
+
+    expect(created.order.status).toBe("PENDING_PAYMENT");
+    const product = await db.product.findUniqueOrThrow({ where: { id: productId } });
+    expect(product.stock).toBe(0);
+
+    const movements = await db.stockMovement.count({
+      where: { orderId: created.order.id, reason: "ORDER_PLACED" },
+    });
+    expect(movements).toBe(0);
+  });
+
+  it("returns to tracked stock rules afterwards", async () => {
+    await setSiteSettings({ stockMode: "TRACKED", cashOnDelivery: true });
+    await resetStock(1);
+    const result = await createOrder(
+      baseInput({ items: [{ productId, quantity: 2 }], idempotencyKey: `tracked-${suffix}` }),
+    );
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe("INSUFFICIENT_STOCK");
   });
 });
 

@@ -212,6 +212,8 @@ export async function saveSettingsAction(
     country: formString(formData, "country"),
     catalogueNotice: formString(formData, "catalogueNotice"),
     orderNotice: formString(formData, "orderNotice"),
+    deliveryNotice: formString(formData, "deliveryNotice"),
+    stockMode: formString(formData, "stockMode"),
     showDemoProducts: bool("showDemoProducts"),
     maxQuantityPerItem: formString(formData, "maxQuantityPerItem"),
     freeDeliveryThreshold: thresholdRaw === "" ? null : thresholdRaw,
@@ -262,6 +264,8 @@ export async function saveSettingsAction(
         store: {
           catalogueNotice: parsed.data.catalogueNotice,
           orderNotice: parsed.data.orderNotice,
+          deliveryNotice: parsed.data.deliveryNotice,
+          stockMode: parsed.data.stockMode,
           showDemoProducts: parsed.data.showDemoProducts,
           maxQuantityPerItem: parsed.data.maxQuantityPerItem,
           freeDeliveryThreshold: parsed.data.freeDeliveryThreshold,

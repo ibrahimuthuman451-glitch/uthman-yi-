@@ -34,6 +34,8 @@ export const settingsFormSchema = z.object({
   country: z.string().trim().max(80).optional().default(""),
   catalogueNotice: z.string().trim().max(400).optional().default(""),
   orderNotice: z.string().trim().max(400).optional().default(""),
+  deliveryNotice: z.string().trim().max(400).optional().default(""),
+  stockMode: z.enum(["TRACKED", "ON_REQUEST"]),
   showDemoProducts: z.boolean(),
   maxQuantityPerItem: z.coerce.number().int().min(1).max(100),
   freeDeliveryThreshold: z.coerce.number().int().min(0).max(10_000_000).nullable(),

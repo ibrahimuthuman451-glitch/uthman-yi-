@@ -5,7 +5,7 @@ import { listAllDeliveryAreas } from "@/server/services/admin-catalog";
 import { saveSettingsAction } from "@/app/actions/admin-content";
 import { AdminActionForm } from "@/components/admin/action-form";
 import type { ActionState } from "@/lib/action-state";
-import { Checkbox, Field, Input, Textarea } from "@/components/ui/field";
+import { Checkbox, Field, Input, Select, Textarea } from "@/components/ui/field";
 import { Alert } from "@/components/ui/alert";
 import { formatDeliveryAreaLines } from "@/lib/validation/settings-lines";
 
@@ -94,6 +94,23 @@ export default async function AdminSettingsPage() {
               </Field>
               <Field label="Order notice" htmlFor="orderNotice" hint="Shown in the cart summary.">
                 <Textarea id="orderNotice" name="orderNotice" rows={2} defaultValue={settings.store.orderNotice} maxLength={400} />
+              </Field>
+              <Field
+                label="Delivery notice"
+                htmlFor="deliveryNotice"
+                hint="Shown at checkout and on the order page. Use it to explain how the delivery fee is agreed."
+              >
+                <Textarea id="deliveryNotice" name="deliveryNotice" rows={2} defaultValue={settings.store.deliveryNotice} maxLength={400} />
+              </Field>
+              <Field
+                label="Stock handling"
+                htmlFor="stockMode"
+                hint="TRACKED refuses orders above the stock figure. ON_REQUEST accepts orders and confirms availability by phone - use it while no reliable inventory count exists."
+              >
+                <Select id="stockMode" name="stockMode" defaultValue={settings.store.stockMode}>
+                  <option value="ON_REQUEST">Accept orders and confirm availability by phone</option>
+                  <option value="TRACKED">Enforce the stock figure entered per product</option>
+                </Select>
               </Field>
               <Checkbox
                 id="showDemoProducts"
