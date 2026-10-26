@@ -16,7 +16,13 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // DATABASE_URL is the connection the application uses. On Supabase that is
+  // the pooled (PgBouncer, port 6543) URI.
   url      = env("DATABASE_URL")
+  // DIRECT_URL is used only by migrations, which cannot run through PgBouncer.
+  // On Supabase that is the direct connection (port 5432). Locally both point
+  // at the same server.
+  directUrl = env("DIRECT_URL")
 }
 
 enum Role {

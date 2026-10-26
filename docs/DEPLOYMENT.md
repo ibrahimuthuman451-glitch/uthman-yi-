@@ -10,7 +10,8 @@ Copy `.env.example` and set:
 
 | Variable | Required | Notes |
 | --- | --- | --- |
-| `DATABASE_URL` | yes | PostgreSQL connection string (`?schema=public`, `sslmode=require` for hosted providers) |
+| `DATABASE_URL` | yes | Pooled PostgreSQL connection used by the app (Supabase transaction pooler, port 6543, `?pgbouncer=true&connection_limit=1&sslmode=require`) |
+| `DIRECT_URL` | yes | Direct/session PostgreSQL connection used only by migrations (Supabase port 5432). See `docs/SUPABASE.md` |
 | `NEXT_PUBLIC_SITE_URL` | yes | Public base URL without a trailing slash; used for canonical URLs, sitemap and Open Graph |
 | `AUTH_SECRET` | yes | 32+ random characters. Rotating it signs every staff session out |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` | seed only | First administrator. Use a strong unique password; production seeding refuses the example value |
@@ -26,7 +27,8 @@ git-ignored.
 
 ### Free-tier options
 - **Neon** — free PostgreSQL with a generous development allowance; copy the pooled connection string.
-- **Supabase** — free PostgreSQL; use the connection string that includes `sslmode=require`.
+- **Supabase** — free PostgreSQL. Use the transaction pooler for `DATABASE_URL` and the direct
+  connection for `DIRECT_URL`; the full walkthrough is in `docs/SUPABASE.md`.
 - **Local / self-hosted** — `docker compose up -d` or `npm run db:start`.
 
 ### Migrations and seed

@@ -19,7 +19,8 @@
     "db:studio": "prisma studio",
     "smoke": "node scripts/smoke-test.mjs",
     "build:ci": "NODE_OPTIONS=--max-old-space-size=2048 prisma generate && NEXT_TELEMETRY_DISABLED=1 NODE_OPTIONS=--max-old-space-size=2048 next build",
-    "catalogue:apply": "tsx --tsconfig tsconfig.scripts.json scripts/import-owner-catalogue.ts"
+    "catalogue:apply": "tsx --tsconfig tsconfig.scripts.json scripts/import-owner-catalogue.ts",
+    "db:check": "node scripts/db-check.mjs"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

@@ -20,7 +20,7 @@ Requirements: **Node.js 20.9+**, **PostgreSQL 14+** (or Docker), npm.
 
 ```bash
 npm install
-cp .env.example .env          # then edit values
+cp .env.example .env          # set DATABASE_URL and DIRECT_URL, then edit the rest
 npm run db:migrate           # create the schema
 npm run db:seed              # admin user, categories, content, labelled demo data
 npm run dev                  # http://localhost:3000
@@ -84,7 +84,7 @@ prisma/
   migrations/               SQL migrations
   seed.ts, seed-data.ts     idempotent seed (content + labelled demo listings)
 data/reference/             third-party catalogue research with provenance (not for sale)
-docs/                       deployment, payments, catalogue format, security, status
+docs/                       deployment, Supabase, payments, catalogue format, security, status
 tests/                      Vitest suites
 scripts/                    dev database, smoke test, link checker
 ```
@@ -148,6 +148,7 @@ scripts/                    dev database, smoke test, link checker
 | `npm run smoke` | HTTP smoke test (requires a running server) |
 | `node scripts/check-links.mjs` | Crawl internal links/images for 404s |
 | `npm run db:start` | Local embedded PostgreSQL (no Docker, no paid service) |
+| `npm run db:check` | Verify a database connection, schema, migrations and row counts (works for Supabase) |
 | `npm run db:migrate` | Apply migrations in development |
 | `npm run db:deploy` | Apply migrations in production |
 | `npm run db:seed` | Seed (development: demo listings allowed) |
