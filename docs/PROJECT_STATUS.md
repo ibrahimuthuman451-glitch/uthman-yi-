@@ -92,7 +92,7 @@ Environment: Node.js 24.22, npm 11.19, Next.js 15.5.28, Prisma 6.19.3, PostgreSQ
 
 | Item | State | Blocker |
 | --- | --- | --- |
-| Official logo | Text wordmark fallback in use | Logo file not supplied (see `public/brand/README.md`) |
+| Official logo | **Integrated 2026-10-26** - original PNG used unchanged in header, footer lockup, OG image and icon | Resolved |
 | Real product catalogue | Only labelled demo listings exist | Owner must supply prices, descriptions, photography and stock |
 | Real delivery fees | One placeholder area with a 0 RWF fee | Owner decision on areas and fees |
 | Customer accounts / order history | Not implemented | Guest checkout + tracking-by-order-number is implemented instead |
@@ -106,7 +106,7 @@ Environment: Node.js 24.22, npm 11.19, Next.js 15.5.28, Prisma 6.19.3, PostgreSQ
 
 ## 7. External credentials and services still required
 
-1. **Logo file** from the owner (PNG/SVG, original colours).
+1. ~~Logo file~~ - supplied 2026-10-26 and integrated unchanged (`public/brand/uthman-iy-logo.png`).
 2. **PostgreSQL** in production (free tiers of Neon/Supabase are sufficient initially).
 3. **`AUTH_SECRET`** generated for production (32+ random characters).
 4. **Strong admin password** (the seed refuses the example value in production).
@@ -171,7 +171,7 @@ Detailed steps: `docs/DEPLOYMENT.md` and `docs/PAYMENTS.md`.
 
 ## 10. Decisions and content that need the owner's approval
 
-1. **Logo file** and confirmation that the blue UY mark is the official artwork.
+1. ~~Logo file~~ - received 2026-10-26; confirm it is the final artwork (a vector version would scale better in print).
 2. **Product pricing policy** — which reference-research items to stock, and Uthman IY's own prices.
 3. **Product copy and photography** — must be owned/licensed; nothing was copied from another company.
 4. **Delivery areas and fees** (the seeded 0 RWF area is explicitly marked as pending).

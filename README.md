@@ -214,11 +214,11 @@ Details and remaining hardening recommendations: `docs/SECURITY.md`.
 
 ## Official logo
 
-The owner's original **blue UY logo** must be placed unchanged in `public/brand/` as
-`uthman-iy-logo.png` (or `.svg` / `.webp` / `.jpg`). The header and footer render that file with
-CSS height only, so its aspect ratio and colours are preserved; no generated substitute is used.
-While the file is absent the site shows the company name as plain text and the admin dashboard
-flags the missing logo. See `public/brand/README.md`.
+The owner's original **blue UY logo** is integrated unchanged at `public/brand/uthman-iy-logo.png`
+(1619 × 971 PNG, SHA-256 `f5d4456e…3db95f`). The header and footer render that exact file with CSS
+height only, so its aspect ratio and colours are preserved; nothing is redrawn, cropped or tinted.
+Because the artwork has a solid white background, the footer places it on a white rounded lockup.
+See `public/brand/README.md` for the verification details.
 
 ---
 
@@ -237,9 +237,8 @@ flags the missing logo. See `public/brand/README.md`.
 
 See `docs/PROJECT_STATUS.md` for the complete list. The blocking items before a real launch are:
 
-1. The official logo file.
-2. Approved product data (prices, descriptions, photography, stock) — currently only labelled demo listings exist.
-3. Confirmed delivery areas and fees (the seeded area has a zero fee marked "pending confirmation").
-4. SMTP/email delivery for automatic form notifications (the published address is set; no mail transport is configured yet).
-5. A decision on payment providers and their commercial accounts (MTN MoMo, Airtel Money, bank, cards).
-6. Optional image storage for product photography.
+1. Approved product data (prices, descriptions, photography, stock) — currently only labelled demo listings exist.
+2. Confirmed delivery areas and fees (the seeded area has a zero fee marked "pending confirmation").
+3. SMTP/email delivery for automatic form notifications (the published address is set; no mail transport is configured yet).
+4. A decision on payment providers and their commercial accounts (MTN MoMo, Airtel Money, bank, cards).
+5. Optional image storage for product photography.

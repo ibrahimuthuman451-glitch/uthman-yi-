@@ -58,12 +58,28 @@ export function Logo({
     );
   }
 
+  if (variant === "light") {
+    // The supplied artwork has a solid white background, so it is placed on a
+    // white lockup rather than tinted or cut out: the original file is untouched.
+    return (
+      <span className={cn("inline-flex items-center rounded-xl bg-white px-2.5 py-1.5", className)}>
+        {/* eslint-disable-next-line @next/next/no-img-element -- original file, natural aspect ratio preserved */}
+        <img
+          src={`/brand/${file}`}
+          alt="Uthman IY"
+          className="h-8 w-auto object-contain sm:h-9"
+          decoding="async"
+        />
+      </span>
+    );
+  }
+
   return (
     // eslint-disable-next-line @next/next/no-img-element -- original file, natural aspect ratio preserved
     <img
       src={`/brand/${file}`}
       alt="Uthman IY"
-      className={cn("w-auto object-contain", variant === "light" ? "h-9" : "h-8 sm:h-9", className)}
+      className={cn("w-auto object-contain", "h-9 sm:h-10", className)}
       decoding="async"
     />
   );
