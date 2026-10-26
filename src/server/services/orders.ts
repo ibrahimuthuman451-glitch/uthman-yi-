@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { Order, OrderItem, PaymentMethod } from "@prisma/client";
+import type { Order, OrderItem, PaymentMethod, Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { getEnv } from "@/lib/env";
 import { getSiteSettings } from "@/lib/settings";

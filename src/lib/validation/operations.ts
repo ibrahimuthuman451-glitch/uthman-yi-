@@ -1,14 +1,6 @@
 import { z } from "zod";
 import { emailSchema, normalizeRwandaPhone, optionalEmailSchema } from "./forms";
 
-const deliveryAreaSchema = z.object({
-  id: z.string().min(1),
-  name: z.string().trim().min(2, "Area name is required").max(80),
-  feeRwf: z.coerce.number().int().min(0).max(1_000_000),
-  isActive: z.boolean(),
-  notes: z.string().trim().max(200).optional().default(""),
-});
-
 export const settingsFormSchema = z.object({
   companyName: z.string().trim().min(2).max(80),
   phone: z
@@ -62,7 +54,8 @@ export const settingsFormSchema = z.object({
   heroHighlight: z.string().trim().max(120).optional().default(""),
   heroSubheadline: z.string().trim().max(400).optional().default(""),
   announcement: z.string().trim().max(200).optional().default(""),
-  deliveryAreas: z.array(deliveryAreaSchema).max(30),
+  // One delivery area per line: "Name | Fee in RWF | active|inactive".
+  deliveryAreas: z.string().trim().max(4000).optional().default(""),
 });
 
 export const orderUpdateSchema = z.object({

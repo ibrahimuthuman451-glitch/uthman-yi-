@@ -27,8 +27,8 @@ export async function consumeRateLimit(options: {
 
   try {
     const bucket = await db.rateLimitBucket.upsert({
-      where: { id: bucketId },
-      create: { id: bucketId, count: 1, expiresAt },
+      where: { key: bucketId },
+      create: { key: bucketId, count: 1, expiresAt },
       update: { count: { increment: 1 } },
       select: { count: true },
     });

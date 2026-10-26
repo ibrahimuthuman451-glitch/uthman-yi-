@@ -313,3 +313,8 @@ export async function updateCategory(
     },
   });
 }
+
+/** Every delivery area, including inactive ones, for the settings editor. */
+export async function listAllDeliveryAreas() {
+  return db.deliveryArea.findMany({ orderBy: [{ sortOrder: "asc" }, { name: "asc" }] });
+}

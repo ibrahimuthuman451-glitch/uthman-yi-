@@ -23,6 +23,7 @@ export type PublicProductCard = {
   availabilityTone: "success" | "warning" | "danger" | "neutral";
   purchasable: boolean;
   isDemo: boolean;
+  stock: number;
   stockLevel: "in" | "low" | "out";
 };
 
@@ -70,6 +71,7 @@ export function toPublicProductCard(product: ProductCardRow): PublicProductCard 
     availabilityTone: availability.tone,
     purchasable: availability.purchasable,
     isDemo: availability.isDemo,
+    stock: product.stock,
     stockLevel:
       product.stock <= 0 ? "out" : product.stock <= product.lowStockThreshold ? "low" : "in",
   };
@@ -149,6 +151,19 @@ export async function listCatalogueProducts(query: CatalogueQuery): Promise<Cata
       orderBy: [orderBy, { createdAt: "desc" }],
       skip: (page - 1) * pageSize,
       take: pageSize,
+    }),
+  ]);
+
+  return {
+    products: rows
+      .map(toPublicProductCard)
+      .filter((product): product is PublicProductCard => product !== null),
+    total,
+    page,
+    pageCount: Math.max(1, Math.ceil(total / pageSize)),
+    pageSize,
+  };
+}
 
 export async function listPublicCategories() {
   return db.category.findMany({
@@ -272,18 +287,4 @@ export async function listFeaturedProducts(take = 4): Promise<PublicProductCard[
   return rows
     .map(toPublicProductCard)
     .filter((product): product is PublicProductCard => product !== null);
-}
-
-    }),
-  ]);
-
-  return {
-    products: rows
-      .map(toPublicProductCard)
-      .filter((product): product is PublicProductCard => product !== null),
-    total,
-    page,
-    pageCount: Math.max(1, Math.ceil(total / pageSize)),
-    pageSize,
-  };
 }

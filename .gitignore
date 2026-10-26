@@ -37,3 +37,6 @@ Thumbs.db
 # misc
 .vercel
 *.pem
+
+# local runtime logs
+/.devdb.log

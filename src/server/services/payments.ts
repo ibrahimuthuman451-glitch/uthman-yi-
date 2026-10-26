@@ -1,6 +1,7 @@
 import "server-only";
 
 import { z } from "zod";
+import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { getTransactionStatus } from "@/lib/payments/mtn-momo";
 
@@ -56,7 +57,7 @@ export async function handleMomoCallback(rawBody: unknown): Promise<{
         eventId,
         orderId: order.id,
         verified: true,
-        payload: providerStatus as unknown as Record<string, unknown>,
+        payload: providerStatus as unknown as Prisma.InputJsonValue,
       },
     });
   } catch (error) {
