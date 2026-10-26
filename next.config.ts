@@ -35,6 +35,16 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
+  experimental: {
+    /**
+     * Build worker pools are sized from os.cpus() by default. On containers
+     * that expose the host's core count (e.g. 180 cores with a 6 GiB memory
+     * limit) that spawns far too many workers and the build is OOM-killed.
+     * Two workers keep builds reliable; raise this on a dedicated build host.
+     */
+    cpus: Number(process.env.NEXT_BUILD_CPUS ?? 2),
+    workerThreads: false,
+  },
   images: {
     // Product photography will be served from an approved storage provider.
     // Add the storage host here once the owner provides real product images.

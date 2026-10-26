@@ -1,0 +1,115 @@
+
+> uthman-iy-platform@0.1.0 build:ci
+> NODE_OPTIONS=--max-old-space-size=2048 prisma generate && NEXT_TELEMETRY_DISABLED=1 NODE_OPTIONS=--max-old-space-size=2048 next build
+
+warn The configuration property `package.json#prisma` is deprecated and will be removed in Prisma 7. Please migrate to a Prisma config file (e.g., `prisma.config.ts`).
+For more information, see: https://pris.ly/prisma-config
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma/schema.prisma
+
+✔ Generated Prisma Client (v6.19.3) to ./node_modules/@prisma/client in 149ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Need your database queries to be 1000x faster? Accelerate offers you that and more: https://pris.ly/tip-2-accelerate
+
+   ▲ Next.js 15.5.28
+   - Environments: .env
+   - Experiments (use with caution):
+     · cpus: 2
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 3.4s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/8) ...
+   Generating static pages (2/8) 
+   Generating static pages (4/8) 
+   Generating static pages (6/8) 
+ ✓ Generating static pages (8/8)
+prisma:error 
+Invalid `prisma.product.findMany()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5432`
+
+Please make sure your database server is running at `127.0.0.1:5432`.
+prisma:error 
+Invalid `prisma.service.findMany()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5432`
+
+Please make sure your database server is running at `127.0.0.1:5432`.
+prisma:error 
+Invalid `prisma.softwareProduct.findMany()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5432`
+
+Please make sure your database server is running at `127.0.0.1:5432`.
+[sitemap] database unavailable, serving static routes Error [PrismaClientInitializationError]: 
+Invalid `prisma.product.findMany()` invocation:
+
+
+Can't reach database server at `127.0.0.1:5432`
+
+Please make sure your database server is running at `127.0.0.1:5432`.
+    at async A (.next/server/app/sitemap.xml/route.js:1:1396)
+    at async D (.next/server/app/sitemap.xml/route.js:1:2479) {
+  clientVersion: '6.19.3',
+  errorCode: undefined,
+  retryable: undefined
+}
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS  Revalidate  Expire
+┌ ƒ /                                     1.8 kB         108 kB
+├ ○ /_not-found                            147 B         103 kB
+├ ƒ /about                                 185 B         106 kB
+├ ƒ /admin                                 185 B         106 kB
+├ ƒ /admin/audit                           147 B         103 kB
+├ ƒ /admin/catalogue                     1.55 kB         108 kB
+├ ƒ /admin/categories                    1.54 kB         108 kB
+├ ƒ /admin/inquiries                       185 B         106 kB
+├ ƒ /admin/inquiries/[id]                1.55 kB         108 kB
+├ ƒ /admin/login                          2.1 kB         108 kB
+├ ƒ /admin/orders                          185 B         106 kB
+├ ƒ /admin/orders/[id]                   1.55 kB         108 kB
+├ ƒ /admin/products                        185 B         106 kB
+├ ƒ /admin/products/[id]                 1.54 kB         108 kB
+├ ƒ /admin/products/new                  1.55 kB         108 kB
+├ ƒ /admin/reference-catalogue           1.54 kB         108 kB
+├ ƒ /admin/services                      1.55 kB         108 kB
+├ ƒ /admin/settings                      1.54 kB         108 kB
+├ ƒ /admin/software                      1.55 kB         108 kB
+├ ƒ /admin/users                         1.54 kB         108 kB
+├ ƒ /api/admin/catalogue/export            147 B         103 kB
+├ ƒ /api/cart                              147 B         103 kB
+├ ƒ /api/payments/mtn/webhook              147 B         103 kB
+├ ƒ /cart                                 4.4 kB         111 kB
+├ ƒ /checkout                            5.94 kB         112 kB
+├ ƒ /contact                             2.92 kB         109 kB
+├ ƒ /orders/[orderNumber]                2.98 kB         109 kB
+├ ƒ /orders/track                        2.19 kB         108 kB
+├ ƒ /privacy                               169 B         106 kB
+├ ○ /robots.txt                            147 B         103 kB
+├ ƒ /shop                                 1.8 kB         108 kB
+├ ƒ /shop/[slug]                         2.71 kB         109 kB
+├ ○ /sitemap.xml                           147 B         103 kB          1h      1y
+├ ƒ /software                              185 B         106 kB
+├ ƒ /software-development                2.92 kB         109 kB
+├ ƒ /software-development/[slug]         2.92 kB         109 kB
+├ ƒ /software/[slug]                     2.92 kB         109 kB
+└ ƒ /terms                                 169 B         106 kB
++ First Load JS shared by all             103 kB
+  ├ chunks/1255-dc3ddf72a1dc71a7.js      46.6 kB
+  ├ chunks/4bd1b696-f785427dddbba9fb.js  54.2 kB
+  └ other shared chunks (total)          1.93 kB
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

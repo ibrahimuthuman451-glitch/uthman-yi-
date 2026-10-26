@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run --pool=forks --maxWorkers=2",
     "test:watch": "vitest",
     "db:start": "node scripts/dev-db.mjs",
     "db:migrate": "prisma migrate dev",
@@ -17,7 +17,8 @@
     "db:seed": "prisma db seed",
     "db:seed:prod": "tsx prisma/seed.ts --production",
     "db:studio": "prisma studio",
-    "smoke": "node scripts/smoke-test.mjs"
+    "smoke": "node scripts/smoke-test.mjs",
+    "build:ci": "NODE_OPTIONS=--max-old-space-size=2048 prisma generate && NEXT_TELEMETRY_DISABLED=1 NODE_OPTIONS=--max-old-space-size=2048 next build"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
