@@ -15,6 +15,21 @@ import { createHash, randomBytes } from "node:crypto";
 const base = process.env.SMOKE_BASE_URL ?? "http://localhost:3000";
 const db = new PrismaClient();
 
+// The script creates and removes a temporary staff session, so it needs direct
+// database access to the same database the running site uses. Fail clearly
+// instead of printing a Prisma stack trace when DATABASE_URL points elsewhere.
+try {
+  await db.$queryRaw`select 1`;
+} catch {
+  console.error(
+    `Cannot reach the verification database for ${base}.
+` +
+      "Set DATABASE_URL (and DIRECT_URL) to the same database the site is using, then re-run.",
+  );
+  await db.$disconnect().catch(() => {});
+  process.exit(1);
+}
+
 const results = [];
 function record(name, ok, detail = "") {
   results.push({ name, ok, detail });
