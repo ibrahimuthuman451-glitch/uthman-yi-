@@ -164,7 +164,7 @@ scripts/                    dev database, smoke test, link checker
 ```bash
 npm run typecheck
 npm run lint
-npm test                 # 42 tests: pricing, availability, validation, payment gating, order lifecycle
+npm test                 # 50 tests: pricing, availability, validation, payment gating, orders, inquiries, import
 npm run build
 npm start &              # then:
 npm run smoke            # 34 HTTP checks

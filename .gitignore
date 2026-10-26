@@ -39,4 +39,4 @@ Thumbs.db
 *.pem
 
 # local runtime logs
-/.devdb.log
+/*.log

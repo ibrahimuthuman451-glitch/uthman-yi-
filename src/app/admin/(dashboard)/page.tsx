@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { getOrderStats, listOrdersForAdmin } from "@/server/services/orders";
+import { getOrderStats, listDeliveryAreas, listOrdersForAdmin } from "@/server/services/orders";
+import { db } from "@/lib/db";
 import { listLowStockProducts } from "@/server/services/admin-catalog";
 import { listInquiries } from "@/server/services/inquiries";
-import { listDeliveryAreas } from "@/server/services/orders";
 import { getSiteSettings } from "@/lib/settings";
 import { getEnv, isEmailConfigured } from "@/lib/env";
 import { hasOfficialLogo } from "@/components/site/logo";
@@ -27,9 +27,9 @@ export default async function AdminDashboardPage() {
 
   const env = getEnv();
   const paymentOptions = buildPaymentOptions(settings, env);
-  const demoCount = await import("@/lib/db").then(({ db }) =>
-    db.product.count({ where: { dataStatus: "DEMO", archivedAt: null } }),
-  );
+  const demoCount = await db.product.count({
+    where: { dataStatus: "DEMO", archivedAt: null },
+  });
 
   const checklist = [
     {

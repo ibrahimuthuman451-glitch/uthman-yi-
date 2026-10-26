@@ -53,7 +53,7 @@ Environment: Node.js 24.22, npm 11.19, Next.js 15.5.28, Prisma 6.19.3, PostgreSQ
 | `npx tsc --noEmit` | Passes with no errors |
 | `npx next lint` | Passes with no warnings or errors |
 | `npm run build:ci` | Production build succeeds; 37 routes compiled |
-| `npm test` | 42 tests pass (5 files: pricing, availability, validation, payments, order integration) |
+| `npm test` | 50 tests pass (7 files: pricing, availability, validation, payments, orders, inquiries and catalogue import) |
 | `npm run smoke` | 34/34 HTTP checks pass against `next start` |
 | `node scripts/check-links.mjs` | Crawled 46 pages; no broken internal links or images |
 

@@ -2,7 +2,6 @@ import "server-only";
 
 import type { Inquiry, InquiryStatus, InquiryType, Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
-import { isEmailConfigured } from "@/lib/env";
 
 export type CreateInquiryInput = {
   type: InquiryType;
@@ -40,9 +39,10 @@ export async function createInquiry(input: CreateInquiryInput): Promise<{
     },
   });
 
-  // SMTP transport is intentionally not bundled: no mail provider credentials
-  // are available, so nothing may pretend the message was emailed.
-  return { inquiry, emailed: false && isEmailConfigured() };
+  // No SMTP transport is bundled because no mail provider is configured, so the
+  // application must not claim that an email was sent. The inquiry is stored and
+  // appears in the admin dashboard immediately.
+  return { inquiry, emailed: false };
 }
 
 export type InquiryQuery = {
