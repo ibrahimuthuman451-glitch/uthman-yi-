@@ -1,6 +1,7 @@
 # Project status and handover
 
-Last updated: 2026-10-26. This document is the honest state of the build: what was implemented,
+Last updated: 2026-10-26 (contact details updated to 0780551125 / 0785 779 207 / uthumanyi@gmail.com). This
+document is the honest state of the build: what was implemented,
 what was executed and observed, what is deliberately not done, and what only the owner can decide.
 
 ## 1. Starting point
@@ -110,7 +111,7 @@ Environment: Node.js 24.22, npm 11.19, Next.js 15.5.28, Prisma 6.19.3, PostgreSQ
 3. **`AUTH_SECRET`** generated for production (32+ random characters).
 4. **Strong admin password** (the seed refuses the example value in production).
 5. **Domain name** (optional but expected for launch) and HTTPS.
-6. **Business email address** and, if automatic notifications are wanted, SMTP/API credentials.
+6. **SMTP/API credentials** if automatic form notifications are wanted. The public contact email is configured.
 7. **MTN MoMo** (and optionally Airtel) merchant accounts, subscription key, API user/key, public
    callback URL, and a successful sandbox test before production.
 8. **Payment/bank details** if bank transfer is to be offered.
@@ -175,7 +176,7 @@ Detailed steps: `docs/DEPLOYMENT.md` and `docs/PAYMENTS.md`.
 3. **Product copy and photography** — must be owned/licensed; nothing was copied from another company.
 4. **Delivery areas and fees** (the seeded 0 RWF area is explicitly marked as pending).
 5. **Payment methods to enable** and whether manual mobile-money verification is acceptable at launch.
-6. **Business email address**, opening hours, street address and any registration/tax details to publish.
+6. **Opening hours**, street address and any registration/tax details to publish (phone numbers and email were confirmed on 2026-10-26).
 7. **Order terms and privacy notice** — written to match the implementation; legal review recommended.
 8. **Software product claims** — current statuses (MatchVision AI: in development; Digital Discipline:
    in development, not on any app store; Tender AI: upcoming) must be confirmed or corrected, and any

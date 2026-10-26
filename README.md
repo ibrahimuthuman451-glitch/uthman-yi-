@@ -1,7 +1,9 @@
 # Uthman IY platform
 
 Production-oriented website and e-commerce platform for **Uthman IY**, a technology
-company in Gisozi, Kigali, Rwanda (0780551125).
+company in Gisozi, Kigali, Rwanda.
+
+**Contact:** 0780551125 · 0785 779 207 · uthumanyi@gmail.com
 
 The repository contains one application with three clearly separated business divisions
 plus a protected administration dashboard:
@@ -238,6 +240,6 @@ See `docs/PROJECT_STATUS.md` for the complete list. The blocking items before a 
 1. The official logo file.
 2. Approved product data (prices, descriptions, photography, stock) — currently only labelled demo listings exist.
 3. Confirmed delivery areas and fees (the seeded area has a zero fee marked "pending confirmation").
-4. A business email address (none is displayed until configured) and, optionally, SMTP for form notifications.
+4. SMTP/email delivery for automatic form notifications (the published address is set; no mail transport is configured yet).
 5. A decision on payment providers and their commercial accounts (MTN MoMo, Airtel Money, bank, cards).
 6. Optional image storage for product photography.

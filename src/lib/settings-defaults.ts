@@ -59,8 +59,9 @@ export const defaultSettings: SiteSettings = {
   company: {
     name: "Uthman IY",
     phone: "0780551125",
-    secondaryPhone: "",
-    email: "",
+    // Confirmed by the owner on 2026-10-26 (+250 785 779 207).
+    secondaryPhone: "0785779207",
+    email: "uthumanyi@gmail.com",
     addressLine: "Gisozi",
     city: "Kigali",
     country: "Rwanda",
