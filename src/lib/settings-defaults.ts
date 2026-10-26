@@ -65,7 +65,8 @@ export const defaultSettings: SiteSettings = {
     addressLine: "Gisozi",
     city: "Kigali",
     country: "Rwanda",
-    whatsappPhone: "0780551125",
+    // WhatsApp uses the second business line, confirmed by the owner on 2026-10-26.
+    whatsappPhone: "0785779207",
   },
   store: {
     currency: "RWF",

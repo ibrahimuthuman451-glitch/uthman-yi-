@@ -3,7 +3,7 @@
 Production-oriented website and e-commerce platform for **Uthman IY**, a technology
 company in Gisozi, Kigali, Rwanda.
 
-**Contact:** 0780551125 · 0785 779 207 · uthumanyi@gmail.com
+**Contact:** 0780551125 · 0785 779 207 (WhatsApp) · uthumanyi@gmail.com
 
 The repository contains one application with three clearly separated business divisions
 plus a protected administration dashboard:
