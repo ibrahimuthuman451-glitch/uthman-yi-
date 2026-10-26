@@ -1,0 +1,243 @@
+# Uthman IY platform
+
+Production-oriented website and e-commerce platform for **Uthman IY**, a technology
+company in Gisozi, Kigali, Rwanda (0780551125).
+
+The repository contains one application with three clearly separated business divisions
+plus a protected administration dashboard:
+
+1. **Online technology shop** (catalogue, cart, checkout, orders, manual payment verification)
+2. **Software development services** (service pages, quote requests)
+3. **Our software** (MatchVision AI, Digital Discipline, Tender AI — separate product pages with honest status labels)
+
+---
+
+## Quick start
+
+Requirements: **Node.js 20.9+**, **PostgreSQL 14+** (or Docker), npm.
+
+```bash
+npm install
+cp .env.example .env          # then edit values
+npm run db:migrate           # create the schema
+npm run db:seed              # admin user, categories, content, labelled demo data
+npm run dev                  # http://localhost:3000
+```
+
+No external services are required to run the site. Payments, email delivery and image
+hosting are optional integrations and are disabled until configured (see `docs/`).
+
+### Windows (PowerShell / CMD)
+
+```powershell
+cd C:\path\to\uthman-iy
+npm install
+copy .env.example .env
+
+# Option A: use an installed PostgreSQL server and set DATABASE_URL in .env
+# Option B: run the bundled embedded PostgreSQL (downloads a local server once)
+npm run db:start
+
+# in a second terminal:
+npm run db:migrate
+npm run db:seed
+npm run dev
+```
+
+Open <http://localhost:3000>. The admin dashboard is at <http://localhost:3000/admin>
+and uses `ADMIN_EMAIL` / `ADMIN_PASSWORD` from `.env` (change the password after the
+first sign-in).
+
+---
+
+## Technology
+
+| Area | Choice |
+| --- | --- |
+| Framework | Next.js 15.5 (App Router, React 19, Server Components + Server Actions) |
+| Language | TypeScript (strict) |
+| Styling | Tailwind CSS 3.4 with a small design system in `src/components/ui` |
+| Database | PostgreSQL with Prisma ORM 6 (migrations + seed) |
+| Validation | Zod (server-side on every form, action and API route) |
+| Auth | Database-backed sessions, bcrypt password hashing, HTTP-only cookies |
+| Tests | Vitest (unit + PostgreSQL integration), HTTP smoke test, link crawler |
+
+---
+
+## Repository layout
+
+```
+src/
+  app/
+    (site)/                 public website (home, shop, cart, checkout, orders, software, services, about, contact, policies)
+    admin/                  staff authentication + protected dashboard (route group "(dashboard)")
+    actions/                server actions (checkout, inquiries, admin operations, auth)
+    api/                    cart validation, catalogue export, MTN MoMo webhook
+    sitemap.ts robots.ts    SEO endpoints
+  components/               design system, shop, site and admin components
+  lib/                      money, validation, auth, settings, rate limiting, payments, order pricing
+  server/services/          business logic (catalogue, orders, payments, inquiries, content, imports)
+prisma/
+  schema.prisma             data model
+  migrations/               SQL migrations
+  seed.ts, seed-data.ts     idempotent seed (content + labelled demo listings)
+data/reference/             third-party catalogue research with provenance (not for sale)
+docs/                       deployment, payments, catalogue format, security, status
+tests/                      Vitest suites
+scripts/                    dev database, smoke test, link checker
+```
+
+---
+
+## What is implemented
+
+### Company website
+- Responsive homepage with hero, division overview, featured products, software showcase, services and contact band
+- Primary navigation (Home, Shop, Software Development, Our Software, About Us, Contact) with desktop dropdown and touch-friendly mobile menu
+- About, Contact, Order terms and Privacy pages; only owner-confirmed details are published
+- Per-page metadata, canonical URLs, Open Graph, sitemap, robots, JSON-LD for the organisation, products and services
+
+### Shop
+- Catalogue with search, category filter, sorting (price/name/newest) and pagination
+- Product pages with price, SKU, availability, specifications, related products and enquiry route
+- Browser cart (product ids + quantities only) with server-side re-pricing before display and checkout
+- Checkout with delivery area + fee, customer details, payment method, terms acceptance and spam honeypot
+- Orders created in a database transaction with conditional stock reservation (no overselling)
+- Order confirmation page (signed, short-lived access cookie) and guest order tracking by order number + email/phone
+- Demo listings are labelled in the UI and never presented as real inventory
+
+### Software development
+- Eight service pages (websites, e-commerce, custom software, web apps, mobile apps, AI, automation, consulting)
+- Quote/consultation forms stored as inquiries with categories, validation and rate limiting
+
+### Our software
+- Overview + three separate product pages driven by the database
+- Feature rows carry `LIVE` / `EXPERIMENTAL` / `PLANNED` labels; product status and status notes are explicit
+- No fabricated demos, statistics, app-store claims, tender listings or government integrations
+- Early-access forms per product
+
+### Administration
+- Sign-in with rate limiting, generic error messages and audit logging
+- Dashboard: orders, paid revenue, awaiting payment, low stock, new inquiries and a launch checklist
+- Products: create/edit/archive, approved price, stock + low-stock threshold, stock movements, specifications, publish/feature flags, demo/reference/approved status
+- Categories: create/edit, ordering, visibility
+- Orders: search, filter, detail view, fulfilment status, cancellation with stock return, verified manual payment recording
+- Inquiries: search/filter, detail view, status and internal notes
+- Content: software products, services, homepage wording, contact details, delivery areas, payment settings
+- Catalogue: documented JSON import (validated, never auto-publishes) and JSON/CSV export
+- Reference research: imported third-party listings with provenance, convertible into unpublished drafts
+- Staff accounts (ADMIN/STAFF roles) and an audit log of privileged actions
+
+---
+
+## Commands
+
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Development server |
+| `npm run build` | Production build (`prisma generate` + `next build`) |
+| `npm run build:ci` | Build with capped heap and worker count (use in small containers) |
+| `npm start` | Serve the production build |
+| `npm run lint` | ESLint (Next.js config) |
+| `npm run typecheck` | TypeScript, no emit |
+| `npm test` | Vitest unit + database integration tests |
+| `npm run smoke` | HTTP smoke test (requires a running server) |
+| `node scripts/check-links.mjs` | Crawl internal links/images for 404s |
+| `npm run db:start` | Local embedded PostgreSQL (no Docker, no paid service) |
+| `npm run db:migrate` | Apply migrations in development |
+| `npm run db:deploy` | Apply migrations in production |
+| `npm run db:seed` | Seed (development: demo listings allowed) |
+| `npm run db:seed:prod` | Seed for production: refuses demo listings and the example admin password |
+| `npm run db:studio` | Prisma Studio |
+
+### Database options
+
+- **Embedded PostgreSQL (zero setup):** `npm run db:start` runs a real PostgreSQL 17
+  server on port 5432 with data in `.pgdata/` (git-ignored). Intended for local development.
+- **Docker:** `docker compose up -d` (see `docker-compose.yml`) then use the printed URL.
+- **Hosted free tier:** Neon or Supabase free PostgreSQL works; see `docs/DEPLOYMENT.md`.
+
+---
+
+## Tests and verification
+
+```bash
+npm run typecheck
+npm run lint
+npm test                 # 42 tests: pricing, availability, validation, payment gating, order lifecycle
+npm run build
+npm start &              # then:
+npm run smoke            # 34 HTTP checks
+node scripts/check-links.mjs
+```
+
+What the automated suite covers:
+
+- Server-side pricing (line totals, delivery fee, free-delivery threshold, integer RWF)
+- Rejection of tampered quantities, duplicate lines, reference listings, missing prices, insufficient stock
+- Order creation: stock reservation, idempotent double-submit, oversell protection, delivery-area validation,
+  unconfigured payment method rejection
+- Order lifecycle: manual payment confirmation (once), cancellation returns stock exactly once, locked statuses
+- Guest order tracking requires the matching email **or** phone number
+- Availability rules (approved/demo/reference/unpublished/archived/low stock/out of stock)
+- Checkout, contact and tracking validation (phone formats, honeypot, consent, malformed cart payloads)
+- Payment method gating (MTN API requires credentials + switch, bank transfer requires account details)
+- RWF formatting/parsing, order number format, delivery-area text parsing
+
+Manual/UX items that were **not** verified by automation in this environment are listed in
+`docs/PROJECT_STATUS.md` (for example visual screenshot review and screen-reader testing).
+
+---
+
+## Configuration and security
+
+- Every secret is read from environment variables; `.env` is git-ignored and `.env.example`
+  contains placeholders only.
+- Prices, totals, delivery fees and stock are always recomputed on the server from the database.
+  A browser that edits `localStorage` cannot change what is charged.
+- All administrative reads require a session; all administrative mutations re-check the session
+  and role server-side (server actions and route handlers included).
+- Public forms and authentication endpoints are rate limited using a PostgreSQL-backed counter.
+- Administrative actions (price/stock changes, order status, payment confirmation, content edits,
+  account changes, exports) are written to an audit log.
+- Responses carry `Content-Security-Policy`, `X-Frame-Options: DENY`, `nosniff`, a strict referrer
+  policy and a restrictive permissions policy. Errors are logged server-side without leaking stack traces.
+- Payment webhooks are treated as hints: the provider is re-queried, amounts are compared, and
+  duplicate notifications are rejected through a unique `PaymentEvent` row.
+- No card details are collected or stored anywhere in the application.
+
+Details and remaining hardening recommendations: `docs/SECURITY.md`.
+
+---
+
+## Official logo
+
+The owner's original **blue UY logo** must be placed unchanged in `public/brand/` as
+`uthman-iy-logo.png` (or `.svg` / `.webp` / `.jpg`). The header and footer render that file with
+CSS height only, so its aspect ratio and colours are preserved; no generated substitute is used.
+While the file is absent the site shows the company name as plain text and the admin dashboard
+flags the missing logo. See `public/brand/README.md`.
+
+---
+
+## Catalogue data policy
+
+- Only **approved** listings with an Uthman IY price are sold. Reference research rows cannot be ordered.
+- Seeded **demo** listings are labelled "Demo listing" on every surface and are excluded in production seed runs.
+- Third-party catalogue research (`data/reference/fabritech-catalogue-2026-10-25.json`) records only
+  titles, categories and reference prices, with source and retrieval date. Descriptions, images and
+  stock quantities were deliberately not copied because reuse needs written permission.
+- Import/export format: `docs/CATALOGUE_FORMAT.md`.
+
+---
+
+## What still needs the owner
+
+See `docs/PROJECT_STATUS.md` for the complete list. The blocking items before a real launch are:
+
+1. The official logo file.
+2. Approved product data (prices, descriptions, photography, stock) — currently only labelled demo listings exist.
+3. Confirmed delivery areas and fees (the seeded area has a zero fee marked "pending confirmation").
+4. A business email address (none is displayed until configured) and, optionally, SMTP for form notifications.
+5. A decision on payment providers and their commercial accounts (MTN MoMo, Airtel Money, bank, cards).
+6. Optional image storage for product photography.
