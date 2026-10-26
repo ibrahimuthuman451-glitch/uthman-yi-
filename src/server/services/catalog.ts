@@ -288,8 +288,11 @@ export async function listRelatedProducts(
 export async function listFeaturedProducts(take = 4): Promise<PublicProductCard[]> {
   const settings = await getSiteSettings();
   const where = await publicProductWhere();
+  // With stock on request every listing has stock 0, so a "stock > 0" filter
+  // would empty the homepage shelf; only enforce it in tracked mode.
+  const stockFilter = settings.store.stockMode === "TRACKED" ? { stock: { gt: 0 } } : {};
   const rows = await db.product.findMany({
-    where: { ...where, priceRwf: { not: null }, stock: { gt: 0 } },
+    where: { ...where, priceRwf: { not: null }, ...stockFilter },
     select: productCardSelect,
     orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
     take,
