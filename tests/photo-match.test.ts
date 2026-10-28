@@ -71,3 +71,20 @@ describe("photo filename matching", () => {
     expect(match("Screenshot 2026-10-26 at 10.12.44.png").status).toBe("unmatched");
   });
 });
+
+describe("brand detection", () => {
+  it("reads the manufacturer from the product title", async () => {
+    const { getProductBrand } = await import("@/lib/catalogue/brand");
+    expect(getProductBrand("HIKVISION DS-2CD1347G2H-LIU 4MP Dome")?.label).toBe("HIKVISION");
+    expect(getProductBrand("IMOU Ranger 2 3MP")?.label).toBe("IMOU");
+    expect(getProductBrand("Starlink Kit V4")?.label).toBe("Starlink");
+  });
+
+  it("handles the supplier spelling variant and unbranded titles", async () => {
+    const { getProductBrand, brandByKey } = await import("@/lib/catalogue/brand");
+    expect(getProductBrand("HIKVISIO 6MP ColorVu 3.0 Fixed Bullet")?.key).toBe("hikvision");
+    expect(getProductBrand("4 MP ColorVu With Smart Hybrid Light")).toBeNull();
+    expect(brandByKey("imou")?.label).toBe("IMOU");
+    expect(brandByKey("unknown")).toBeNull();
+  });
+});

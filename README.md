@@ -100,8 +100,9 @@ scripts/                    dev database, smoke test, link checker
 - Per-page metadata, canonical URLs, Open Graph, sitemap, robots, JSON-LD for the organisation, products and services
 
 ### Shop
-- Catalogue with search, category filter, sorting (price/name/newest) and pagination
-- Product pages with price, SKU, availability, specifications, related products and enquiry route
+- Catalogue with search, brand filter, category filter, sorting (price/name/newest) and pagination
+- Product pages with brand badge, price in RWF, SKU, availability, specifications, related products and enquiry route
+- Brand identity (HIKVISION, IMOU, Starlink) derived from the product title, shown on cards, product pages, structured data and a homepage brand strip
 - Browser cart (product ids + quantities only) with server-side re-pricing before display and checkout
 - Checkout with delivery area + fee, customer details, payment method, terms acceptance and spam honeypot
 - Orders created in a database transaction with conditional stock reservation (no overselling)

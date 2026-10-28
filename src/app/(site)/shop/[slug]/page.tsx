@@ -55,7 +55,7 @@ export default async function ProductDetailPage({ params }: { params: Params }) 
     description: product.shortDescription || product.description.slice(0, 300),
     sku: product.sku ?? undefined,
     ...(product.imageUrl ? { image: [product.imageUrl] } : {}),
-    brand: { "@type": "Brand", name: "Uthman IY" },
+    brand: { "@type": "Brand", name: product.brand?.label ?? "Uthman IY" },
     ...(product.priceRwf !== null
       ? {
           offers: {
@@ -107,6 +107,7 @@ export default async function ProductDetailPage({ params }: { params: Params }) 
 
         <div>
           <div className="flex flex-wrap items-center gap-2">
+            {product.brand ? <Badge tone="brand">{product.brand.label}</Badge> : null}
             {product.categoryName ? (
               <Link href={`/shop?category=${product.categorySlug}`}>
                 <Badge tone="neutral">{product.categoryName}</Badge>

@@ -3,6 +3,7 @@ import "server-only";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getProductAvailability } from "@/lib/catalog/availability";
+import { brandByKey, getProductBrand, type Brand } from "@/lib/catalogue/brand";
 import { getSiteSettings } from "@/lib/settings";
 import type { Prisma } from "@prisma/client";
 
@@ -17,6 +18,7 @@ export type PublicProductCard = {
   compareAtPriceRwf: number | null;
   imageUrl: string | null;
   imageAlt: string | null;
+  brand: Brand | null;
   categoryName: string | null;
   categorySlug: string | null;
   availabilityLabel: string;
@@ -71,6 +73,7 @@ export function toPublicProductCard(
     compareAtPriceRwf: product.compareAtPriceRwf,
     imageUrl: product.imageUrl,
     imageAlt: product.imageAlt,
+    brand: getProductBrand(product.name),
     categoryName: product.category?.name ?? null,
     categorySlug: product.category?.slug ?? null,
     availabilityLabel: availability.label,
@@ -101,6 +104,7 @@ export async function publicProductWhere(): Promise<Prisma.ProductWhereInput> {
 export type CatalogueQuery = {
   search?: string;
   category?: string;
+  brand?: string;
   sort?: "newest" | "price-asc" | "price-desc" | "name-asc";
   page?: number;
   pageSize?: number;
@@ -121,8 +125,10 @@ export async function listCatalogueProducts(query: CatalogueQuery): Promise<Cata
   const baseWhere = await publicProductWhere();
 
   const search = query.search?.trim().slice(0, 80) ?? "";
+  const brand = brandByKey(query.brand);
   const where: Prisma.ProductWhereInput = {
     ...baseWhere,
+    ...(brand ? { name: { contains: brand.label, mode: "insensitive" } } : {}),
     ...(query.category && query.category !== "all"
       ? { category: { is: { slug: query.category, isActive: true } } }
       : {}),

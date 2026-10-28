@@ -15,6 +15,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
       >
         <ProductMedia src={product.imageUrl} alt={product.imageAlt} name={product.name} />
         <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
+          {product.brand ? <Badge tone="neutral">{product.brand.label}</Badge> : null}
           {product.isDemo ? <Badge tone="demo">Demo listing</Badge> : null}
           {product.compareAtPriceRwf && product.priceRwf ? (
             <Badge tone="brand">Price updated</Badge>
