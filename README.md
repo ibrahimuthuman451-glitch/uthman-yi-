@@ -84,7 +84,7 @@ prisma/
   migrations/               SQL migrations
   seed.ts, seed-data.ts     idempotent seed (content + labelled demo listings)
 data/reference/             third-party catalogue research with provenance (not for sale)
-docs/                       go-live checklist, deployment, Supabase, payments, catalogue format, security, status
+docs/                       go-live checklist, deployment, Supabase, product photos, payments, catalogue format, security, status
 tests/                      Vitest suites
 scripts/                    dev database, smoke test, link checker
 ```
@@ -154,6 +154,9 @@ scripts/                    dev database, smoke test, link checker
 | `npm run db:seed` | Seed (development: demo listings allowed) |
 | `npm run db:seed:prod` | Seed for production: refuses demo listings and the example admin password |
 | `npm run db:studio` | Prisma Studio |
+| `npm run photos:download -- <folderId>` | Download images from a public Google Drive folder into `photos-in/` |
+| `npm run photos:match` | Dry-run: match photo filenames to products (no writes) |
+| `npm run photos:apply` | Optimise to WebP and attach matched photos to products |
 | `npm run catalogue:apply` | Re-import the owner-approved catalogue (idempotent; approved prices, stock and publication flags are preserved). Add `-- --apply-settings` to re-apply store settings, or `-- --update-prices` to overwrite prices deliberately |
 
 ### Database options

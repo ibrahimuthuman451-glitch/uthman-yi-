@@ -41,3 +41,6 @@ Thumbs.db
 
 # local runtime logs
 /*.log
+
+# owner-supplied photo originals (processed copies live in public/products)
+/photos-in/
