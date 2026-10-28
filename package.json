@@ -23,7 +23,9 @@
     "db:check": "node scripts/db-check.mjs",
     "photos:download": "node scripts/drive-folder.mjs",
     "photos:match": "tsx --tsconfig tsconfig.scripts.json scripts/import-product-photos.ts",
-    "photos:apply": "tsx --tsconfig tsconfig.scripts.json scripts/import-product-photos.ts --apply"
+    "photos:apply": "tsx --tsconfig tsconfig.scripts.json scripts/import-product-photos.ts --apply",
+    "photos:map": "tsx --tsconfig tsconfig.scripts.json scripts/map-drive-photos.ts",
+    "photos:urls": "tsx --tsconfig tsconfig.scripts.json scripts/apply-photo-urls.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

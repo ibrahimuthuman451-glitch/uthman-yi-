@@ -32,6 +32,41 @@ const GENERIC = new Set([
   "digital", "video", "outdoor", "indoor", "hd", "uhd", "poe",
 ]);
 
+/**
+ * Removes supplier/marketplace noise from a photo file name:
+ * `imgi_10_Hikvision_DS-2CD2143G2-I_2_8mm_q7bf9i (2).jpg` -> `Hikvision DS-2CD2143G2-I 2 8mm`.
+ */
+function looksLikeCdnHash(token: string): boolean {
+  if (!/^[a-z0-9]+$/i.test(token)) return false;
+  // Never strip something that looks like a model code (UPS2000VA, DS7616NIQ2).
+  if (isModelToken(token.toLowerCase())) return false;
+  if (token.length < 5 || token.length > 9) return false;
+  // Mixed letters and digits, or an unpronounceable consonant run (q7bf9i, rqbjxd).
+  if (/\d/.test(token) && /[a-z]/i.test(token)) return true;
+  if (!/^[a-z]+$/i.test(token)) return false;
+  const vowels = (token.match(/[aeiou]/gi) ?? []).length;
+  return vowels / token.length < 0.3;
+}
+
+/**
+ * Removes supplier/marketplace noise from a photo file name:
+ * `imgi_10_Hikvision_DS-2CD2143G2-I_2_8mm_q7bf9i (2).jpg` -> `Hikvision DS 2CD2143G2 I 2 8mm`.
+ */
+export function cleanPhotoFileName(value: string): string {
+  const base = value
+    .replace(/\.[a-z0-9]+$/i, "")
+    .replace(/\s*\(\d+\)\s*$/, "")
+    .replace(/^(imgi?|image|photo|photos|pics?)[-_ ]?\d+[-_ ]+/i, "")
+    .replace(/[-_ ]+(ebay|alibaba|amazon|shopify|jumia)/gi, " ")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const parts = base.split(" ");
+  while (parts.length > 1 && looksLikeCdnHash(parts[parts.length - 1])) parts.pop();
+  return parts.join(" ");
+}
+
 export function normalizeName(value: string): string {
   return value
     .toLowerCase()
@@ -91,18 +126,32 @@ function scorePair(
   fileTokens: string[],
   product: PhotoProduct,
   weights: Map<string, number>,
-): number {
+): { score: number; distinctive: number } {
   const productTokens = tokens(product.name);
   const productSet = new Set(productTokens);
+  const compactProductName = normalizeName(product.name).replace(/[^a-z0-9]/g, "");
   const uniqueFileTokens = [...new Set(fileTokens)];
   let score = 0;
   let shared = 0;
+  let distinctive = 0;
 
   for (const token of uniqueFileTokens) {
     const weight = weights.get(token) ?? 1;
     if (productSet.has(token)) {
       shared += 1;
+      if (isModelToken(token)) distinctive += 1;
       score += isModelToken(token) ? weight * 2.5 : weight;
+    } else if (
+      token.length >= 5 &&
+      /\d/.test(token) &&
+      compactProductName.includes(token.replace(/[^a-z0-9]/g, ""))
+    ) {
+      // Model codes are written inconsistently ("DS-UPS2000 VA" vs
+      // "DS-UPS2000VA", "DS-7616NI-Q2/16P" vs "DS7616NIQ2"). A compact
+      // substring match keeps those identical without weakening short tokens.
+      shared += 1;
+      distinctive += 1;
+      score += weight * 1.2;
     } else {
       // Tokens present in the file name but missing from the product title are
       // evidence against the match (e.g. "2" in "Ranger 2" vs "Ranger Mini").
@@ -127,22 +176,24 @@ function scorePair(
   const productMp = megapixels(product.name);
   if (fileMp !== null && productMp !== null && fileMp !== productMp) score -= 4;
 
-  return score;
+  return { score, distinctive };
 }
 
-export function rankPhotoMatches(fileName: string, products: PhotoProduct[]): {
-  slug: string;
-  name: string;
-  score: number;
-}[] {
+export type RankedPhotoMatch = { slug: string; name: string; score: number; distinctive: number };
+
+export function rankPhotoMatches(fileName: string, products: PhotoProduct[]): RankedPhotoMatch[] {
   const weights = idfWeights(products);
-  const fileTokens = tokens(fileName.replace(/\.[a-z0-9]+$/i, ""));
+  const fileTokens = tokens(cleanPhotoFileName(fileName));
   return products
-    .map((product) => ({
-      slug: product.slug,
-      name: product.name,
-      score: Math.round(scorePair(fileTokens, product, weights) * 100) / 100,
-    }))
+    .map((product) => {
+      const { score, distinctive } = scorePair(fileTokens, product, weights);
+      return {
+        slug: product.slug,
+        name: product.name,
+        score: Math.round(score * 100) / 100,
+        distinctive,
+      };
+    })
     .sort((a, b) => b.score - a.score);
 }
 
@@ -151,7 +202,7 @@ export function matchPhotoToProduct(fileName: string, products: PhotoProduct[]):
   const best = ranked[0] ?? null;
   const alternatives = ranked.slice(1, 4).filter((candidate) => candidate.score > 0);
 
-  if (!best || best.score < 3) {
+  if (!best || best.score < 4) {
     return {
       status: "unmatched",
       best: null,
@@ -160,9 +211,22 @@ export function matchPhotoToProduct(fileName: string, products: PhotoProduct[]):
     };
   }
 
-  const second = alternatives[0];
+  const [second] = alternatives;
   const margin = second ? best.score - second.score : best.score;
-  if (second && margin < 1 && second.score > best.score * 0.85) {
+
+  // A match must be either supported by a model code / series evidence, or be
+  // strong enough that no reasonable alternative exists. Anything else is
+  // surfaced for a human instead of being attached to a product.
+  if (best.distinctive === 0 && best.score < 12) {
+    return {
+      status: "ambiguous",
+      best,
+      alternatives,
+      reason: "No model code or series evidence; a human should confirm this photo.",
+    };
+  }
+
+  if (second && (margin < 1.5 || second.score > best.score * 0.9)) {
     return {
       status: "ambiguous",
       best,
@@ -175,6 +239,6 @@ export function matchPhotoToProduct(fileName: string, products: PhotoProduct[]):
     status: "matched",
     best,
     alternatives,
-    reason: `Matched on ${Math.round(best.score)} weighting points (margin ${margin.toFixed(2)}).`,
+    reason: `Matched on ${Math.round(best.score)} points (margin ${margin.toFixed(2)}, model evidence ${best.distinctive}).`,
   };
 }

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { matchPhotoToProduct, normalizeName } from "@/lib/catalogue/photo-match";
+import { cleanPhotoFileName, matchPhotoToProduct, normalizeName } from "@/lib/catalogue/photo-match";
 
 const payload = JSON.parse(
   readFileSync(path.join(process.cwd(), "data/import/uthman-iy-catalogue-2026-10-26.json"), "utf8"),
@@ -18,6 +18,21 @@ describe("photo filename matching", () => {
     expect(normalizeName("HIKVISION_DS-2CD1347G2H-LIU 4MP.JPG")).toBe(
       "hikvision ds 2cd1347g2h liu 4mp jpg",
     );
+  });
+
+  it("strips supplier, marketplace and duplicate-file noise", () => {
+    expect(cleanPhotoFileName("imgi_10_Hikvision_DS-2CD2143G2-I_2_8mm_q7bf9i (2).jpg")).toBe(
+      "Hikvision DS 2CD2143G2 I 2 8mm",
+    );
+    expect(cleanPhotoFileName("imgi_17_HIKVISION_DS-UPS2000VA_rqbjxd.jpg")).toBe(
+      "HIKVISION DS UPS2000VA",
+    );
+  });
+
+  it("matches a model code written without separators", () => {
+    const result = match("imgi_17_HIKVISION_DS-UPS2000VA_rqbjxd.jpg");
+    expect(result.status).toBe("matched");
+    expect(result.best?.name).toContain("DS-UPS2000");
   });
 
   it("matches an exact model code", () => {

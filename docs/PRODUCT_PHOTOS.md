@@ -22,7 +22,21 @@ npm run photos:download -- 1IzFReTKQ3PFCllPKr_cWbULxcZ6fzY6F           # downloa
 
 Files land in `photos-in/` (git-ignored). Re-running skips files that already exist.
 
-## 3. Match (dry run first)
+## 3. Map exactly (preferred)
+
+```bash
+npm run photos:map          # dry run: product -> exact image file
+npm run photos:map -- --apply
+```
+
+The catalogue was imported from the reference shop, whose public API lists the image file name for
+each product; the shared folder uses those same names. This script therefore maps **product →
+exact file name**, which is deterministic and avoids guessing. It reports any product whose photo
+is absent and any duplicate listing that would reuse the same file.
+
+Result on 2026-10-28: **60/60 products mapped**, 60 WebP files (1.4 MB total).
+
+## 4. Match by name (fallback)
 
 ```bash
 npm run photos:match
@@ -42,7 +56,7 @@ How matching works (`src/lib/catalogue/photo-match.ts`):
 - if two products score within one point, the file is reported **ambiguous** instead of guessed;
 - filenames with no distinctive tokens (`IMG_2034.jpg`) are reported **unmatched**.
 
-## 4. Apply
+## 5. Apply
 
 ```bash
 npm run photos:apply
@@ -62,7 +76,7 @@ Safety rules:
 - one file can only attach to one product; duplicate matches are reported;
 - ambiguous/unmatched files are never attached automatically.
 
-## 5. Rename files to fix mismatches
+## 6. Rename files to fix mismatches
 
 Rename the source file to include the model code or distinguishing number, then re-run
 `npm run photos:match`. Examples that match reliably:
@@ -73,7 +87,7 @@ IMOU Ranger 2 3MP.jpg                     → series + megapixels
 Starlink Kit V4.png                       → exact product name
 ```
 
-## 6. After applying
+## 7. After applying
 
 ```bash
 npm run build && npm start
@@ -83,6 +97,17 @@ node scripts/check-links.mjs
 
 Commit `public/products/*.webp` and `data/product-photos/manifest.json` so the images ship with
 the deployment; `photos-in/` stays out of git.
+
+## Updating another database (e.g. Supabase)
+
+When the image files are committed but a different database needs the URLs:
+
+```bash
+DATABASE_URL="<production pooler URL>" npm run photos:urls
+```
+
+`scripts/apply-photo-urls.ts` sets `imageUrl`/`imageAlt` for every product that has a matching
+`public/products/<slug>.webp`. It needs no source photos and makes no network calls.
 
 ## Notes
 
