@@ -48,6 +48,7 @@ export const deliveryFeeStatusLabels: Record<string, string> = {
   PENDING_AGREEMENT: "Delivery fee pending agreement",
   AGREED: "Delivery fee agreed",
   WAIVED: "Delivery waived",
+  FREE: "Free delivery",
 };
 
 export const paymentStatusLabels: Record<PaymentStatus, string> = {

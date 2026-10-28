@@ -64,9 +64,12 @@ enum PaymentMethod {
 /// Delivery is agreed by phone for nationwide orders, so the fee has an
 /// explicit state rather than being silently assumed to be zero.
 enum DeliveryFeeStatus {
+  /// Kept for historical rows created before free delivery was introduced.
   PENDING_AGREEMENT
   AGREED
   WAIVED
+  /// Delivery is free across Rwanda: no fee is charged or agreed.
+  FREE
 }
 
 enum InquiryType {

@@ -124,7 +124,7 @@ scripts/                    dev database, smoke test, link checker
 - Dashboard: orders, paid revenue, awaiting payment, low stock, new inquiries and a launch checklist
 - Products: create/edit/archive, approved price, stock + low-stock threshold, stock movements, specifications, publish/feature flags, demo/reference/approved status
 - Categories: create/edit, ordering, visibility
-- Orders: search, filter, detail view, fulfilment status, cancellation with stock return, verified manual payment recording, and recording the delivery fee agreed by phone
+- Orders: search, filter, detail view, fulfilment status, cancellation with stock return, verified manual payment recording, and an optional delivery-fee override (delivery is free by default)
 - Inquiries: search/filter, detail view, status and internal notes
 - Content: software products, services, homepage wording, contact details, delivery areas, payment settings
 - Catalogue: documented JSON import (validated, never auto-publishes) and JSON/CSV export
@@ -248,7 +248,7 @@ See `public/brand/README.md` for the verification details.
 See `docs/PROJECT_STATUS.md` for the complete list. The blocking items before a real launch are:
 
 1. Product photography and verified specifications (listings currently show labelled placeholders and “specifications pending”); prices are approved and reviewed through the weekly workflow in Admin → Price review.
-2. Delivery fee amount(s): the shop offers nationwide delivery with the fee agreed by phone. Add fixed-fee areas in Admin → Settings if a published price list is preferred.
+2. Delivery is currently free across Rwanda. Add fixed-fee areas in Admin → Settings if a paid delivery model is introduced later.
 3. SMTP/email delivery for automatic form notifications (the published address is set; no mail transport is configured yet).
 4. Confirm that Airtel Money number **0727 733 580** is a valid Uthman IY receiving account (it is configured but marked unverified), and provide MTN MoMo Collections API credentials only if automatic payment confirmation is wanted.
 5. Optional image storage for product photography.

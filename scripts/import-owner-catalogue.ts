@@ -65,11 +65,11 @@ async function main() {
       showDemoProducts: false,
       maxQuantityPerItem: 20,
       catalogueNotice:
-        "All prices are in Rwandan francs (RWF) and were last reviewed on 26 October 2026. Delivery is available across Rwanda; the delivery fee is confirmed by phone before dispatch.",
+        "All prices are in Rwandan francs (RWF) and were last reviewed on 26 October 2026. Delivery is free across Rwanda.",
       orderNotice:
         "Your order is confirmed by phone before dispatch. Payment instructions are shown on your order page.",
       deliveryNotice:
-        "Delivery is arranged across Rwanda. The delivery fee depends on your location and is agreed with you by phone before dispatch; it is not charged online.",
+        "Free delivery across Rwanda. No delivery fee is added at checkout, so the total shown is the final amount for your products.",
     },
     payments: {
       cashOnDelivery: { enabled: false },
@@ -106,12 +106,11 @@ async function main() {
   } else {
     await db.deliveryArea.create({
       data: {
-        name: "Rwanda - nationwide (fee confirmed by phone)",
+        name: "Rwanda - nationwide (free delivery)",
         feeRwf: 0,
         isActive: true,
         sortOrder: 0,
-        notes:
-          "Delivery across Rwanda. The fee depends on the district and is agreed by phone before dispatch; it is not charged online.",
+        notes: "Free delivery across Rwanda. No delivery fee is charged at checkout.",
       },
     });
   }

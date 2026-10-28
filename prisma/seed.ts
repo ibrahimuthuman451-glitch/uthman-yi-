@@ -84,20 +84,17 @@ async function seedDeliveryAreas() {
     return;
   }
 
-  // Uthman IY delivers across Rwanda. The fee depends on the destination and is
-  // agreed by phone before dispatch, so no invented fee is stored here; the
-  // owner can add fixed-fee areas in Admin -> Settings at any time.
+  // Delivery is free across Rwanda.
   await db.deliveryArea.create({
     data: {
-      name: "Rwanda - nationwide (fee confirmed by phone)",
+      name: "Rwanda - nationwide (free delivery)",
       feeRwf: 0,
       isActive: true,
       sortOrder: 0,
-      notes:
-        "Delivery across Rwanda. The fee depends on the district and is agreed by phone before dispatch; it is not charged online.",
+      notes: "Free delivery across Rwanda. No delivery fee is charged at checkout.",
     },
   });
-  log("Created the nationwide delivery area (fee agreed by phone).");
+  log("Created the nationwide free-delivery area.");
 }
 
 async function seedCategories() {

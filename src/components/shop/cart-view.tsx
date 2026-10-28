@@ -192,9 +192,9 @@ export function CartView({
             <dt className="text-muted">Subtotal</dt>
             <dd className="font-medium text-navy-900">{formatRwf(subtotal)}</dd>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-between gap-3">
             <dt className="text-muted">Delivery</dt>
-            <dd className="text-navy-600">Calculated at checkout</dd>
+            <dd className="text-right font-medium text-emerald-700">Free across Rwanda</dd>
           </div>
         </dl>
         <div className="mt-4 flex justify-between border-t border-navy-100 pt-4 text-base font-semibold text-navy-900">

@@ -157,9 +157,10 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
           subtotalRwf: pricing.subtotalRwf,
           deliveryFeeRwf: pricing.deliveryFeeRwf,
           totalRwf: pricing.totalRwf,
-          // A fee that is already known (fixed-fee area) is agreed by
-          // definition; the nationwide area leaves it to be agreed by phone.
-          deliveryFeeStatus: pricing.deliveryFeeRwf > 0 ? "AGREED" : "PENDING_AGREEMENT",
+          // Delivery is free across Rwanda, so a zero fee is a settled state
+          // (FREE), not something still to be agreed. A fixed-fee area is
+          // agreed by definition.
+          deliveryFeeStatus: pricing.deliveryFeeRwf > 0 ? "AGREED" : "FREE",
           deliveryFeeAgreedRwf: pricing.deliveryFeeRwf > 0 ? pricing.deliveryFeeRwf : null,
           deliveryFeeAgreedAt: pricing.deliveryFeeRwf > 0 ? new Date() : null,
           paymentReference: input.paymentReference?.trim() || null,

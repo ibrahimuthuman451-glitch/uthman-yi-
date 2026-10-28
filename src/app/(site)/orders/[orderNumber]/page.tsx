@@ -59,6 +59,7 @@ export default async function OrderPage({
   const needsPayment = order.paymentStatus !== "PAID" && order.status !== "CANCELLED";
   const showReferenceForm = needsPayment && acceptsPaymentReference(order.paymentMethod);
   const deliveryFeePending = order.deliveryFeeStatus === "PENDING_AGREEMENT";
+  const deliveryIsFree = order.deliveryFeeStatus === "FREE";
 
   return (
     <div className="bg-surface">
@@ -150,14 +151,29 @@ export default async function OrderPage({
                       ? "Confirmed by phone"
                       : order.deliveryFeeStatus === "WAIVED"
                         ? "Waived"
-                        : formatRwf(order.deliveryFeeRwf)}
+                        : order.deliveryFeeStatus === "FREE"
+                          ? "Free"
+                          : formatRwf(order.deliveryFeeRwf)}
                   </dd>
                 </div>
                 <div className="flex justify-between border-t border-navy-100 pt-2 text-base font-bold text-navy-900">
-                  <dt>{deliveryFeePending ? "Products total" : "Total"}</dt>
+                  <dt>Total</dt>
                   <dd>{formatRwf(order.totalRwf)}</dd>
                 </div>
               </dl>
+              {deliveryIsFree ? (
+                <p className="border-t border-navy-100 px-5 py-3 text-xs leading-5 text-emerald-700">
+                  Free delivery across Rwanda — no delivery charge applies to this order.
+                </p>
+              ) : deliveryFeePending ? (
+                <p className="border-t border-navy-100 px-5 py-3 text-xs leading-5 text-muted">
+                  {settings.store.deliveryNotice} This products total is not the final delivered cost.
+                </p>
+              ) : order.deliveryFeeStatus === "AGREED" ? (
+                <p className="border-t border-navy-100 px-5 py-3 text-xs leading-5 text-muted">
+                  Delivery fee agreed by phone: {formatRwf(order.deliveryFeeRwf)}. The order total includes it.
+                </p>
+              ) : null}
             </section>
 
             <section className="rounded-2xl border border-navy-100 bg-white p-5">

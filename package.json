@@ -25,7 +25,8 @@
     "photos:match": "tsx --tsconfig tsconfig.scripts.json scripts/import-product-photos.ts",
     "photos:apply": "tsx --tsconfig tsconfig.scripts.json scripts/import-product-photos.ts --apply",
     "photos:map": "tsx --tsconfig tsconfig.scripts.json scripts/map-drive-photos.ts",
-    "photos:urls": "tsx --tsconfig tsconfig.scripts.json scripts/apply-photo-urls.ts"
+    "photos:urls": "tsx --tsconfig tsconfig.scripts.json scripts/apply-photo-urls.ts",
+    "delivery:free": "tsx --tsconfig tsconfig.scripts.json scripts/apply-free-delivery.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

@@ -111,11 +111,11 @@ export const defaultSettings: SiteSettings = {
     // always labelled. This flag lets the owner hide them entirely.
     showDemoProducts: !isProduction(),
     catalogueNotice:
-      "All prices are in Rwandan francs (RWF) and were last reviewed on 26 October 2026. Delivery is available across Rwanda; the delivery fee is confirmed by phone before dispatch.",
+      "All prices are in Rwandan francs (RWF) and were last reviewed on 26 October 2026. Delivery is free across Rwanda.",
     orderNotice:
       "Your order is confirmed by phone before dispatch. Payment instructions are shown on your order page.",
     deliveryNotice:
-      "Delivery is arranged across Rwanda. The delivery fee depends on your location and is agreed with you by phone before dispatch; it is not charged online.",
+      "Free delivery across Rwanda. No delivery fee is added at checkout, so the total shown is the final amount for your products.",
     freeDeliveryThreshold: null,
     maxQuantityPerItem: 20,
   },

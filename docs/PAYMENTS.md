@@ -119,7 +119,10 @@ application. Never ask a customer for their mobile money PIN.
 
 ## Delivery fee is not a payment
 
-Nationwide delivery has no published fee, so an order starts with `deliveryFeeStatus =
-PENDING_AGREEMENT` and a products-only total. When the fee is agreed by phone, staff record it in
-Admin → Orders. That updates the total and writes an order event; it does **not** mark the order
+Delivery is **free across Rwanda**, so every new order is created with `deliveryFeeStatus = FREE`,
+`deliveryFeeRwf = 0` and a total equal to the products subtotal. No fee is added at checkout and
+nothing is deferred to a phone call.
+
+If an exception is required (for example a special courier), staff can record a fee in Admin →
+Orders. That updates the total and writes an audited order event; it does **not** mark the order
 paid, dispatched or completed. If the order is already paid, the fee cannot be changed.

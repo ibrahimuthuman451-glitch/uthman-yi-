@@ -181,7 +181,7 @@ Detailed steps: `docs/DEPLOYMENT.md` and `docs/PAYMENTS.md`.
 1. ~~Logo file~~ - received 2026-10-26; confirm it is the final artwork (a vector version would scale better in print).
 2. **Adopted prices** - approved on 2026-10-26 and protected from accidental overwrite. Name the person responsible for the weekly review recorded in Admin -> Price review.
 3. **Product photography and specifications** - none were supplied or copied; listings show a labelled placeholder and a "specifications pending" note until you provide them.
-4. **Delivery fee model** - nationwide delivery is offered with the fee agreed by phone. Decide whether to publish fixed fees per district instead (Admin -> Settings -> Delivery areas).
+4. ~~Delivery fee model~~ - delivery is now **free across Rwanda** (owner decision, 2026-10-28). Add fixed-fee areas only if that policy changes.
 5. **Payments** - confirm manual MTN MoMo and Airtel Money verification is acceptable at launch, confirm that Airtel number 0727 733 580 is an active Uthman IY receiving account, and decide whether to onboard the MTN MoMo API.
 6. **Opening hours**, street address and any registration/tax details to publish (phone numbers and email were confirmed on 2026-10-26).
 7. **Order terms and privacy notice** — written to match the implementation; legal review recommended.

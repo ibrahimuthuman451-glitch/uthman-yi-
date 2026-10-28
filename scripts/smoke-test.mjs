@@ -103,9 +103,9 @@ try {
     `status ${checkout.status}`,
   );
   record(
-    "Checkout explains that the delivery fee is agreed by phone",
-    checkout.body.includes("Delivery is arranged across Rwanda") &&
-      checkout.body.includes("agreed with you by phone"),
+    "Checkout states that delivery is free across Rwanda",
+    checkout.body.includes("Free delivery across Rwanda") &&
+      !checkout.body.includes("agreed with you by phone"),
     "delivery wording",
   );
   record(

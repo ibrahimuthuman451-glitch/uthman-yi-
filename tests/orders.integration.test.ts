@@ -385,7 +385,7 @@ describe("approved selling price vs reference price", () => {
 });
 
 describe("delivery agreed by phone", () => {
-  it("keeps the delivery fee pending and records the agreed amount on the server", async () => {
+  it("treats a zero-fee area as free delivery and lets staff override it", async () => {
     await setSiteSettings({ stockMode: "TRACKED", cashOnDelivery: true });
     await resetStock(10);
 
@@ -400,7 +400,7 @@ describe("delivery agreed by phone", () => {
     if (!created.ok) return;
     createdOrderIds.push(created.order.id);
 
-    expect(created.order.deliveryFeeStatus).toBe("PENDING_AGREEMENT");
+    expect(created.order.deliveryFeeStatus).toBe("FREE");
     expect(created.order.deliveryFeeRwf).toBe(0);
     expect(created.order.totalRwf).toBe(created.order.subtotalRwf);
 

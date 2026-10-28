@@ -113,7 +113,7 @@ export function CheckoutForm({
     0,
   );
   const deliveryFee = selectedArea?.feeRwf ?? 0;
-  const deliveryFeePending = deliveryFee === 0;
+  const deliveryIsFree = deliveryFee === 0;
   const total = subtotal + deliveryFee;
   const hasDemo = lines.some((line) => line.server?.isDemo);
 
@@ -194,7 +194,7 @@ export function CheckoutForm({
               >
                 {areas.map((area) => (
                   <option key={area.id} value={area.id}>
-                    {area.name} — {area.feeRwf === 0 ? "fee confirmed at dispatch" : formatRwf(area.feeRwf)}
+                    {area.name} — {area.feeRwf === 0 ? "free delivery" : formatRwf(area.feeRwf)}
                   </option>
                 ))}
               </Select>
@@ -317,12 +317,12 @@ export function CheckoutForm({
           </div>
           <div className="flex justify-between gap-3">
             <dt className="text-muted">Delivery{selectedArea ? ` (${selectedArea.name})` : ""}</dt>
-            <dd className="text-right font-medium text-navy-900">
-              {deliveryFeePending ? "Confirmed by phone" : formatRwf(deliveryFee)}
+            <dd className="text-right font-medium text-emerald-700">
+              {deliveryIsFree ? "Free" : formatRwf(deliveryFee)}
             </dd>
           </div>
           <div className="flex justify-between border-t border-navy-100 pt-3 text-base font-semibold text-navy-900">
-            <dt>{deliveryFeePending ? "Products total" : "Total"}</dt>
+            <dt>Total</dt>
             <dd>{formatRwf(total)}</dd>
           </div>
         </dl>

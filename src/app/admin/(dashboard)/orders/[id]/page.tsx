@@ -93,12 +93,14 @@ export default async function AdminOrderDetailPage({
                       ? "To be agreed"
                       : order.deliveryFeeStatus === "WAIVED"
                         ? "Waived"
-                        : formatRwf(order.deliveryFeeRwf)}
+                        : order.deliveryFeeStatus === "FREE"
+                          ? "Free"
+                          : formatRwf(order.deliveryFeeRwf)}
                   </td>
                 </tr>
                 <tr>
                   <td colSpan={3} className="px-5 py-2 text-right font-semibold text-navy-900">
-                    {order.deliveryFeeStatus === "PENDING_AGREEMENT" ? "Products total" : "Total"}
+                    Total
                   </td>
                   <td className="px-5 py-2 text-right font-bold tabular-nums">{formatRwf(order.totalRwf)}</td>
                 </tr>
@@ -190,8 +192,9 @@ export default async function AdminOrderDetailPage({
           <section className="rounded-2xl border border-navy-100 bg-white p-5">
             <h2 className="text-base font-semibold text-navy-900">Delivery fee</h2>
             <p className="mt-1 text-xs leading-5 text-muted">
-              Delivery is agreed by phone. Recording the agreed amount updates the order total on the server; it does not
-              mark the order paid or delivered.
+              Delivery is free across Rwanda, so this order starts at its products total. Recording a fee here overrides
+              that (for example a special courier); it updates the total on the server and is audited, but it never marks
+              the order paid or delivered.
             </p>
             {order.paymentStatus !== "PAID" &&
             order.status !== "CANCELLED" &&
